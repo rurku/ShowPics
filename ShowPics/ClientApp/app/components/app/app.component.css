@@ -4,3 +4,19 @@
         padding-top: 50px;
     }
 }
+
+/* Keep the left panel independent of scrolling and on top of other items */
+.left-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+}
+
+@media (min-width: 768px) {
+    .left-panel {
+        height: 100%;
+        width: calc(25% - 20px);
+    }
+}
