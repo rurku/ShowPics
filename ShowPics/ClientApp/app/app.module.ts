@@ -4,11 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import { RouterModule } from '@angular/router';
 
-import { AppComponent } from './components/app/app.component';
-import { NavMenuComponent } from './components/navmenu/navmenu.component';
-import { HomeComponent } from './components/home/home.component';
-import { FetchDataComponent } from './components/fetchdata/fetchdata.component';
-import { CounterComponent } from './components/counter/counter.component';
+import { AppComponent } from './app.component';
+import { NavMenuComponent } from './navmenu/navmenu.component';
+import { HomeComponent } from './home/home.component';
+import { FetchDataComponent } from './fetchdata/fetchdata.component';
+import { CounterComponent } from './counter/counter.component';
 
 @NgModule({
     declarations: [
