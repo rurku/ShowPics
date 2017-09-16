@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { TreeElement } from './tree/tree-element';
+import { TreeElement, TreeElementType } from './tree/tree-element';
 
 @Component({
   selector: 'app-media-browser',
@@ -8,10 +8,15 @@ import { TreeElement } from './tree/tree-element';
 })
 export class MediaBrowserComponent implements OnInit {
 
-  selectedItem: TreeElement;
+  selectedTreeElement: TreeElement;
+  treeElementType = TreeElementType;
 
   constructor() { }
 
   ngOnInit() {
+  }
+
+  onTreeElementSelected(element: TreeElement) {
+    this.selectedTreeElement = element;
   }
 }
