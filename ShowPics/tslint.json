@@ -4,7 +4,6 @@
   ],
   "extends": [ "angular-tslint-rules" ],
   "rules": {
-    "indent": [ true, "spaces", 4 ],
     "component-selector": [
       true,
       "element",

@@ -4,11 +4,11 @@ import { AppModuleShared } from './app.module';
 import { AppComponent } from './app.component';
 
 @NgModule({
-    bootstrap: [ AppComponent ],
-    imports: [
-        ServerModule,
-        AppModuleShared
-    ]
+  bootstrap: [AppComponent],
+  imports: [
+    ServerModule,
+    AppModuleShared
+  ]
 })
 export class AppModule {
 }

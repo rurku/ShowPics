@@ -1,6 +1,4 @@
-﻿# Editor configuration, see http://editorconfig.org
-root = true
-
+# Editor configuration, see http://editorconfig.org
 [*]
 charset = utf-8
 indent_style = space
@@ -12,5 +10,5 @@ trim_trailing_whitespace = true
 max_line_length = off
 trim_trailing_whitespace = false
 
-[*.json]
+[*.{json,js,ts}]
 indent_size = 2

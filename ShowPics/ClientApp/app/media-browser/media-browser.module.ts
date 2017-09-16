@@ -8,10 +8,10 @@ import { PreviewComponent } from './preview/preview.component';
 
 @NgModule({
   imports: [
-      CommonModule,
-      RouterModule.forChild([
-          { path: 'browse', component: MediaBrowserComponent }
-      ])
+    CommonModule,
+    RouterModule.forChild([
+      { path: 'browse', component: MediaBrowserComponent }
+    ])
   ],
   declarations: [TreeComponent, ThumbnailsComponent, MediaBrowserComponent, PreviewComponent],
   exports: []
