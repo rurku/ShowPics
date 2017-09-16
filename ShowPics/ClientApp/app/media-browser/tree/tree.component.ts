@@ -7,21 +7,17 @@ import { TreeElement, TreeElementType } from './tree-element';
   styleUrls: ['./tree.component.css']
 })
 export class TreeComponent implements OnInit {
+  selectedElement: TreeElement;
+  elements: Array<TreeElement> = [new TreeElement(TreeElementType.File, 'file1'), new TreeElement(TreeElementType.Folder, 'folder1')];
+  @Output() onSelected = new EventEmitter<TreeElement>();
 
   constructor() { }
 
   ngOnInit() {
   }
 
-  selectedElement: TreeElement;
-
   onSelect(element: TreeElement) {
     this.selectedElement = element;
     this.onSelected.emit(element);
   }
-
-  @Output() onSelected = new EventEmitter<TreeElement>();
-
-  elements: Array<TreeElement> = [new TreeElement(TreeElementType.File, "file1"), new TreeElement(TreeElementType.Folder, "folder1")];
-
 }
