@@ -10,6 +10,13 @@
   ],
   "defaults": {
     "styleExt": "css",
-    "component": {}
-  }
+    "component": {},
+    "lintFix": true
+  },
+  "lint": [
+    {
+      "project": "tsconfig.app",
+      "exclude": ["**/boot.browser.ts", "**/boot.server.ts"]
+    }
+  ]
 }

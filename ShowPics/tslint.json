@@ -1,0 +1,20 @@
+{
+  "rulesDirectory": [
+    "node_modules/codelyzer"
+  ],
+  "extends": [ "angular-tslint-rules" ],
+  "rules": {
+    "indent": [ true, "spaces", 4 ],
+    "component-selector": [
+      true,
+      "element",
+      [ "test", "app" ],
+      "kebab-case"
+    ],
+    "no-empty": false,
+    "typedef": false,
+    "array-type": false,
+    "prefer-template": [ true, "allow-single-concat" ],
+    "no-reference": false
+  }
+}
