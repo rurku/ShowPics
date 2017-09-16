@@ -1,0 +1,14 @@
+<div class='row'>
+    <div class='col-sm-3'>
+        <app-tree></app-tree>
+    </div>
+    <div class='col-sm-9 body-content'>
+        <div *ngIf="selectedItem; else nothingSelected">
+            <app-thumbnails *ngIf="slectedItem.type=='folder'"></app-thumbnails>
+            <!--<app-preview *ngIf="slectedItem.type=='file'"></app-preview>-->
+        </div>
+        <ng-template #nothingSelected>
+            Select something in the tree
+        </ng-template>
+    </div>
+</div>
