@@ -1,5 +1,6 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
-import { TreeElement, TreeElementType } from './tree-element';
+import { FileService } from '../file.service';
+import { FileSystemObject } from '../file-service-dtos';
 
 @Component({
   selector: 'app-tree',
@@ -7,17 +8,22 @@ import { TreeElement, TreeElementType } from './tree-element';
   styleUrls: ['./tree.component.css']
 })
 export class TreeComponent implements OnInit {
-  selectedElement: TreeElement;
-  elements: Array<TreeElement> = [new TreeElement(TreeElementType.File, 'file1'), new TreeElement(TreeElementType.Folder, 'folder1')];
-  @Output() onSelected = new EventEmitter<TreeElement>();
+  selectedObject: FileSystemObject;
+  tree: FileSystemObject;
+  @Output() onSelected = new EventEmitter<FileSystemObject>();
 
-  constructor() { }
+  constructor(private fileService: FileService) { }
 
-  ngOnInit() {
+  getTree(): void {
+    this.fileService.getFiles().then(fso => this.tree = fso);
   }
 
-  onSelect(element: TreeElement) {
-    this.selectedElement = element;
-    this.onSelected.emit(element);
+  ngOnInit() {
+    this.getTree();
+  }
+
+  onSelect(fso: FileSystemObject) {
+    this.selectedObject = fso;
+    this.onSelected.emit(fso);
   }
 }

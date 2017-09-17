@@ -1,22 +1,24 @@
 import { Component, OnInit } from '@angular/core';
-import { TreeElement, TreeElementType } from './tree/tree-element';
+import { FileSystemObject, FileSystemObjectTypes } from './file-service-dtos';
+import { FileService } from './file.service';
 
 @Component({
   selector: 'app-media-browser',
   templateUrl: './media-browser.component.html',
-  styleUrls: ['./media-browser.component.css']
+  styleUrls: ['./media-browser.component.css'],
+  providers: [FileService]
 })
 export class MediaBrowserComponent implements OnInit {
 
-  selectedTreeElement: TreeElement;
-  treeElementType = TreeElementType;
+  selectedFileSystemObject: FileSystemObject;
+  fileSystemObjectTypes = FileSystemObjectTypes;
 
   constructor() { }
 
   ngOnInit() {
   }
 
-  onTreeElementSelected(element: TreeElement) {
-    this.selectedTreeElement = element;
+  onFileSystemObjectSelected(object: FileSystemObject) {
+    this.selectedFileSystemObject = object;
   }
 }

@@ -1,11 +1,11 @@
 <div class='row'>
     <div class='col-sm-3'>
-        <app-tree (onSelected)="onTreeElementSelected($event)"></app-tree>
+        <app-tree (onSelected)="onFileSystemObjectSelected($event)"></app-tree>
     </div>
     <div class='col-sm-9 body-content'>
-        <div *ngIf="selectedTreeElement; else nothingSelected">
-            <app-thumbnails *ngIf="selectedTreeElement.type==treeElementType.Folder"></app-thumbnails>
-            <app-preview *ngIf="selectedTreeElement.type==treeElementType.File"></app-preview>
+        <div *ngIf="selectedFileSystemObject; else nothingSelected">
+            <app-thumbnails *ngIf="selectedFileSystemObject.type==fileSystemObjectTypes.DIRECTORY"></app-thumbnails>
+            <app-preview *ngIf="selectedFileSystemObject.type==fileSystemObjectTypes.FILE"></app-preview>
         </div>
         <ng-template #nothingSelected>
             Select something in the tree
