@@ -21,6 +21,7 @@ const nonTreeShakableModules = [
   'es6-shim',
   'event-source-polyfill',
   'jquery',
+  'angular-tree-component/dist/angular-tree-component.css'
 ];
 const allModules = treeShakableModules.concat(nonTreeShakableModules);
 

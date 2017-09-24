@@ -48,7 +48,7 @@ namespace ShowPics.Controllers
                 }
                 else
                 {
-                    return DirSearch(Path.Combine(remainingSegments.ToArray()), physicalPath);
+                    return DirSearch(Path.Combine(remainingSegments.ToArray()), physicalPath, rootDir);
                 }
 
             }
@@ -56,25 +56,25 @@ namespace ShowPics.Controllers
 
         private DirectoryDto GetRootDirectory(string name, string physicalPath)
         {
-            var result = DirSearch("", physicalPath);
+            var result = DirSearch("", physicalPath, name);
             result.Name = name;
             return result;
         }
 
-        static DirectoryDto DirSearch(string path, string rootPath)
+        static DirectoryDto DirSearch(string path, string rootPath, string rootName)
         {
             var dirPath = Path.Combine(rootPath, path.Replace('/', Path.DirectorySeparatorChar));
             var info = new DirectoryInfo(dirPath);
             var result = new DirectoryDto()
             {
                 Name = info.Name,
-                Path = path
+                Path = JoinPaths(rootName, path)
             };
 
             foreach (string d in Directory.GetDirectories(dirPath))
             {
                 var dirInfo = new DirectoryInfo(d);
-                result.Children.Add(DirSearch(JoinPaths(path, dirInfo.Name), rootPath));
+                result.Children.Add(DirSearch(JoinPaths(path, dirInfo.Name), rootPath, rootName));
             }
 
             foreach (string f in Directory.GetFiles(dirPath))
@@ -94,6 +94,10 @@ namespace ShowPics.Controllers
             if (string.IsNullOrEmpty(a))
             {
                 return b;
+            }
+            else if (string.IsNullOrEmpty(b))
+            {
+                return a;
             }
             else
                 return $"{a}/{b}";

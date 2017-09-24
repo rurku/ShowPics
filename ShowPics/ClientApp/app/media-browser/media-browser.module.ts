@@ -1,5 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TreeModule } from 'angular-tree-component';
+
 import { TreeComponent } from './tree/tree.component';
 import { ThumbnailsComponent } from './thumbnails/thumbnails.component';
 import { MediaBrowserComponent } from './media-browser.component';
@@ -11,7 +13,8 @@ import { PreviewComponent } from './preview/preview.component';
     CommonModule,
     RouterModule.forChild([
       { path: 'browse', component: MediaBrowserComponent }
-    ])
+    ]),
+    TreeModule
   ],
   declarations: [TreeComponent, ThumbnailsComponent, MediaBrowserComponent, PreviewComponent],
   exports: []

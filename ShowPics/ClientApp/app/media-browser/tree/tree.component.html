@@ -1,7 +1,7 @@
 <div>
     tree works!
     <div *ngIf="tree; else noTree">
-        <button *ngFor="let object of tree.children" (click)="onSelect(object)">{{ object.name }}</button>
+        <tree-root [nodes]="tree" [options]="options" (activate)="onSelect($event.node.data)"></tree-root>
     </div>
     <ng-template #noTree>
         But there's no tree :-(
