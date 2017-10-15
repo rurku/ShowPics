@@ -15,6 +15,10 @@ namespace ShowPics.Controllers
     [Route("api/[controller]")]
     public class FilesController : Controller
     {
+        private static readonly Dictionary<string, string> _mimeTypeMapping = new Dictionary<string, string>()
+        {
+            {".jpg", "image/jpeg" }
+        };
         private readonly IOptions<FolderSettings> _options;
 
         public FilesController(IOptions<FolderSettings> options)
@@ -31,7 +35,7 @@ namespace ShowPics.Controllers
                 {
                     Name = "",
                     Path = "/",
-                    Children = _options.Value.Folders.Select(x => GetRootDirectory(x.Name, x.PhysicalPath)).Cast<FileSystemObject>().ToList()
+                    Children = _options.Value.Folders.Select(x => GetNodeDto("", x.PhysicalPath, x.Name)).Cast<FileSystemObject>().ToList()
                 };
             }
             else
@@ -42,65 +46,46 @@ namespace ShowPics.Controllers
                 if (physicalPath == null)
                     throw new Exception($"root folder {rootDir} not found.");
                 var remainingSegments = pathSegments.Skip(1);
-                if (!remainingSegments.Any())
+                return GetNodeDto(JoinLogicalPaths(remainingSegments.ToArray()), physicalPath, rootDir);
+            }
+        }
+
+        static FileSystemObject GetNodeDto(string logicalPath, string rootPhysicalPath, string rootLogicalName)
+        {
+            var physicalPath = Path.Combine(rootPhysicalPath, logicalPath.Replace('/', Path.DirectorySeparatorChar));
+
+            var fileAttr = System.IO.File.GetAttributes(physicalPath);
+            if (fileAttr.HasFlag(FileAttributes.Directory))
+            {
+                var dirInfo = new DirectoryInfo(physicalPath);
+                var result = new DirectoryDto()
                 {
-                    return GetRootDirectory(rootDir, physicalPath);
+                    Name = string.IsNullOrEmpty(logicalPath) ? rootLogicalName : dirInfo.Name,
+                    Path = JoinLogicalPaths(rootLogicalName, logicalPath)
+                };
+                foreach (var fullPath in (Directory.EnumerateFileSystemEntries(physicalPath)))
+                {
+                    var name = new FileInfo(fullPath).Name;
+                    result.Children.Add(GetNodeDto(JoinLogicalPaths(logicalPath, name), rootPhysicalPath, rootLogicalName));
                 }
-                else
-                {
-                    return DirSearch(Path.Combine(remainingSegments.ToArray()), physicalPath, rootDir);
-                }
-
-            }
-        }
-
-        private DirectoryDto GetRootDirectory(string name, string physicalPath)
-        {
-            var result = DirSearch("", physicalPath, name);
-            result.Name = name;
-            return result;
-        }
-
-        static DirectoryDto DirSearch(string path, string rootPath, string rootName)
-        {
-            var dirPath = Path.Combine(rootPath, path.Replace('/', Path.DirectorySeparatorChar));
-            var info = new DirectoryInfo(dirPath);
-            var result = new DirectoryDto()
-            {
-                Name = info.Name,
-                Path = JoinPaths(rootName, path)
-            };
-
-            foreach (string d in Directory.GetDirectories(dirPath))
-            {
-                var dirInfo = new DirectoryInfo(d);
-                result.Children.Add(DirSearch(JoinPaths(path, dirInfo.Name), rootPath, rootName));
-            }
-
-            foreach (string f in Directory.GetFiles(dirPath))
-            {
-                var fileInfo = new FileInfo(f);
-                result.Children.Add(new FileDto()
-                {
-                    Name = fileInfo.Name,
-                    Path = JoinPaths(path, fileInfo.Name)
-                });
-            }
-            return result;
-        }
-
-        private static string JoinPaths(string a, string b)
-        {
-            if (string.IsNullOrEmpty(a))
-            {
-                return b;
-            }
-            else if (string.IsNullOrEmpty(b))
-            {
-                return a;
+                return result;
             }
             else
-                return $"{a}/{b}";
+            {
+                var fileInfo = new FileInfo(physicalPath);
+                return new FileDto()
+                {
+                    Name = fileInfo.Name,
+                    Path = JoinLogicalPaths(rootLogicalName, logicalPath),
+                    ContentType = _mimeTypeMapping.GetValueOrDefault(fileInfo.Extension)
+                };
+            }
+        }
+
+        private static string JoinLogicalPaths(params string[] paths)
+        {
+            var normalized = paths.Select(x => x.Trim('/')).Where(x => !string.IsNullOrEmpty(x));
+            return string.Join('/', normalized);
         }
     }
 }
