@@ -15,7 +15,7 @@ namespace ShowPics.Controllers
     [Route("api/[controller]")]
     public class FilesController : Controller
     {
-        private static readonly Dictionary<string, string> _mimeTypeMapping = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> _mimeTypeMapping = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             {".jpg", "image/jpeg" }
         };
@@ -27,16 +27,16 @@ namespace ShowPics.Controllers
         }
 
         [HttpGet("{*path}")]
-        public FileSystemObject Get(string path)
+        public ActionResult Get(string path, string format)
         {
             if (string.IsNullOrEmpty(path))
             {
-                return new DirectoryDto()
+                return Ok(new DirectoryDto()
                 {
                     Name = "",
                     Path = "/",
                     Children = _options.Value.Folders.Select(x => GetNodeDto("", x.PhysicalPath, x.Name)).Cast<FileSystemObject>().ToList()
-                };
+                });
             }
             else
             {
@@ -46,7 +46,13 @@ namespace ShowPics.Controllers
                 if (physicalPath == null)
                     throw new Exception($"root folder {rootDir} not found.");
                 var remainingSegments = pathSegments.Skip(1);
-                return GetNodeDto(JoinLogicalPaths(remainingSegments.ToArray()), physicalPath, rootDir);
+                var node = GetNodeDto(JoinLogicalPaths(remainingSegments.ToArray()), physicalPath, rootDir);
+                if (node is FileDto fileInfo && format != "json" && !string.IsNullOrEmpty(fileInfo.ContentType))
+                {
+                    var fileStream = System.IO.File.OpenRead(Path.Combine(remainingSegments.Prepend(physicalPath).ToArray()));
+                    return File(fileStream, fileInfo.ContentType);
+                }
+                return Ok(node);
             }
         }
 
