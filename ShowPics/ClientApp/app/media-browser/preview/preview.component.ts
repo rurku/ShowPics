@@ -9,7 +9,7 @@ import { FileService } from '../file.service';
 })
 export class PreviewComponent implements OnInit {
 
-  constructor(private fileService: FileService) { }
+  constructor(public fileService: FileService) { }
 
   @Input() fileSystemObject: FileSystemObject;
 
