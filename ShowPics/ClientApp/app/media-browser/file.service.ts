@@ -22,4 +22,8 @@ export class FileService {
       .then(response => response.json() as FileSystemObject)
       .catch(FileService.handleError);
   }
+
+  getUri(path: string) {
+    return "/" + this.filesUrl + "/" + path;
+  }
 }

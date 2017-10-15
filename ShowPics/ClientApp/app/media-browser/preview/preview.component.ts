@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
+import { FileSystemObject } from '../file-service-dtos';
+import { FileService } from '../file.service';
 
 @Component({
   selector: 'app-preview',
@@ -7,7 +9,9 @@ import { Component, OnInit } from '@angular/core';
 })
 export class PreviewComponent implements OnInit {
 
-  constructor() { }
+  constructor(private fileService: FileService) { }
+
+  @Input() fileSystemObject: FileSystemObject;
 
   ngOnInit() {
   }
