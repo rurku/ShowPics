@@ -9,5 +9,7 @@ namespace ShowPics.Dtos
     {
         [JsonProperty(Order = 0)]
         public string ContentType;
+        public int Width;
+        public int Height;
     }
 }

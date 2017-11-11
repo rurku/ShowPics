@@ -21,7 +21,9 @@ const nonTreeShakableModules = [
   'es6-shim',
   'event-source-polyfill',
   'jquery',
-  'angular-tree-component/dist/angular-tree-component.css'
+  'angular-tree-component/dist/angular-tree-component.css',
+  'photoswipe/dist/photoswipe.css',
+  'photoswipe/dist/default-skin/default-skin.css',
 ];
 const allModules = treeShakableModules.concat(nonTreeShakableModules);
 
@@ -33,7 +35,7 @@ module.exports = (env) => {
     resolve: { extensions: ['.js'] },
     module: {
       rules: [
-        { test: /\.(png|woff|woff2|eot|ttf|svg)(\?|$)/, use: 'url-loader?limit=100000' }
+        { test: /\.(png|woff|woff2|eot|ttf|svg|gif)(\?|$)/, use: 'url-loader?limit=100000' }
       ]
     },
     output: {

@@ -4,6 +4,8 @@ export class FileSystemObject {
   name: string;
   children: FileSystemObject[];
   contentType: string;
+  width: number;
+  height: number;
 }
 
 export class FileSystemObjectTypes {
