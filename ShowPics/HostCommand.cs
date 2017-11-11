@@ -7,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Utilities.Cli;
+using Microsoft.Extensions.DependencyInjection;
+using Utilities;
 
 namespace ShowPics
 {
@@ -19,12 +21,16 @@ namespace ShowPics
         {
         }
 
-        public void Run(string[] args)
+        public void ConfigureServices(IServiceCollection services)
         {
-            BuildWebHost(args).Run();
         }
 
-        public IWebHost BuildWebHost(string[] args)
+        public void Run(string[] args, IServiceProvider serviceProvider)
+        {
+            BuildWebHost(args, serviceProvider).Run();
+        }
+
+        public IWebHost BuildWebHost(string[] args, IServiceProvider serviceProvider)
         {
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -34,8 +40,10 @@ namespace ShowPics
 
             return WebHost.CreateDefaultBuilder(args)
                 .UseConfiguration(config)
+                .ConfigureServices(serviceProvider.GetService<ICommonServiceConfiguration>().ConfigureServices)
                 .UseStartup<Startup>()
                 .Build();
         }
+
     }
 }

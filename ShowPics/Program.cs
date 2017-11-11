@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using McMaster.Extensions.CommandLineUtils;
 using Utilities.Cli;
+using Microsoft.Extensions.DependencyInjection;
+using Utilities;
 
 namespace ShowPics
 {
@@ -15,11 +17,32 @@ namespace ShowPics
     {
         public static void Main(string[] args)
         {
+            if (Environment.GetEnvironmentVariable("RUNS_IN_IIS_EXPRESS") == "true" && args.Length == 0)
+                args = new string[] { "host" };
+
             var app = new CommandLineApplication(throwOnUnexpectedArg: false);
             app.HelpOption();
             ConfigureCommands(app);
             app.OnExecute(() => app.ShowHelp());
             app.Execute(args);
+        }
+
+        private static IServiceCollection BuildServiceCollection()
+        {
+            var config = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true)
+                .Build();
+
+            var serviceCollection = new ServiceCollection();
+
+            serviceCollection.AddSingleton<IConfiguration>(config);
+
+            var commonConfiguration = new CommonServiceConfiguration();
+            serviceCollection.AddSingleton<ICommonServiceConfiguration>(commonConfiguration);
+            commonConfiguration.ConfigureServices(serviceCollection);
+
+            return serviceCollection;
         }
 
         private static void ConfigureCommands(CommandLineApplication app)
@@ -40,7 +63,12 @@ namespace ShowPics
                     command.ConfigureOptions(builder);
                     cla.OnExecute(() => {
                         builder.ExecuteCallbacks();
-                        command.Run(cla.RemainingArguments.ToArray());
+                        var services = BuildServiceCollection();
+                        command.ConfigureServices(services);
+                        using (var serviceProvider = services.BuildServiceProvider())
+                        {
+                            command.Run(cla.RemainingArguments.ToArray(), serviceProvider);
+                        }
                     });
                 });
             }
