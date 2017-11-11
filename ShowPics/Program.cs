@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using McMaster.Extensions.CommandLineUtils;
+using Utilities.Cli;
 
 namespace ShowPics
 {
@@ -14,21 +15,35 @@ namespace ShowPics
     {
         public static void Main(string[] args)
         {
-            BuildWebHost(args).Run();
+            var app = new CommandLineApplication(throwOnUnexpectedArg: false);
+            app.HelpOption();
+            ConfigureCommands(app);
+            app.OnExecute(() => app.ShowHelp());
+            app.Execute(args);
         }
 
-        public static IWebHost BuildWebHost(string[] args)
+        private static void ConfigureCommands(CommandLineApplication app)
         {
-            var config = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("hosting.json", optional: true)
-                .AddCommandLine(args)
-                .Build();
+            var commands = new ICliCommand[]
+            {
+                new HostCommand()
+            };
 
-            return WebHost.CreateDefaultBuilder(args)
-                .UseConfiguration(config)
-                .UseStartup<Startup>()
-                .Build();
+            foreach (var command in commands)
+            {
+                app.Command(command.CommandName, cla =>
+                {
+                    cla.ThrowOnUnexpectedArgument = false;
+                    cla.Description = command.CommandDescription;
+                    cla.HelpOption();
+                    var builder = new CliOptionsBuilder(cla);
+                    command.ConfigureOptions(builder);
+                    cla.OnExecute(() => {
+                        builder.ExecuteCallbacks();
+                        command.Run(cla.RemainingArguments.ToArray());
+                    });
+                });
+            }
         }
     }
 }
