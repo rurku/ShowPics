@@ -31,7 +31,7 @@
     <ProjectReference Include="..\ShowPics.Cli\ShowPics.Cli.csproj" />
     <ProjectReference Include="..\ShowPics.Data\ShowPics.Data.csproj" />
     <ProjectReference Include="..\ShowPics.Dtos\ShowPics.Dtos.csproj" />
-    <ProjectReference Include="..\Utilities\Utilities.csproj" />
+    <ProjectReference Include="..\ShowPics.Utilities\ShowPics.Utilities.csproj" />
   </ItemGroup>
 
   <Target Name="DebugRunWebpack" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('wwwroot\dist') ">

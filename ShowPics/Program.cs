@@ -7,9 +7,9 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using McMaster.Extensions.CommandLineUtils;
-using Utilities.Cli;
+using ShowPics.Utilities.Cli;
 using Microsoft.Extensions.DependencyInjection;
-using Utilities;
+using ShowPics.Utilities;
 using ShowPics.Data;
 using Microsoft.EntityFrameworkCore;
 

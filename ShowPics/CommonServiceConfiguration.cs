@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Utilities;
+using ShowPics.Utilities;
 using ShowPics.Settings;
 using Microsoft.Extensions.Configuration;
 using ShowPics.Data;

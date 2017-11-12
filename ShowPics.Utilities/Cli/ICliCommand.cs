@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Utilities.Cli
+namespace ShowPics.Utilities.Cli
 {
     public interface ICliCommand
     {
