@@ -10,6 +10,8 @@ using McMaster.Extensions.CommandLineUtils;
 using Utilities.Cli;
 using Microsoft.Extensions.DependencyInjection;
 using Utilities;
+using ShowPics.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace ShowPics
 {
@@ -27,7 +29,7 @@ namespace ShowPics
             app.Execute(args);
         }
 
-        private static IServiceCollection BuildServiceCollection()
+        public static IServiceCollection BuildServiceCollection()
         {
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -67,10 +69,19 @@ namespace ShowPics
                         command.ConfigureServices(services);
                         using (var serviceProvider = services.BuildServiceProvider())
                         {
+                            MigrateDatabase(serviceProvider);
                             command.Run(cla.RemainingArguments.ToArray(), serviceProvider);
                         }
                     });
                 });
+            }
+        }
+
+        private static void MigrateDatabase(IServiceProvider serviceProvider)
+        {
+            using (var serviceScope = serviceProvider.CreateScope())
+            {
+                serviceScope.ServiceProvider.GetService<ShowPicsDbContext>().Database.Migrate();
             }
         }
     }
