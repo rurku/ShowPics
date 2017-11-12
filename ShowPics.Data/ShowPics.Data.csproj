@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ShowPics.Data.Abstractions\ShowPics.Data.Abstractions.csproj" />
     <ProjectReference Include="..\ShowPics.Entities\ShowPics.Entities.csproj" />
   </ItemGroup>
 

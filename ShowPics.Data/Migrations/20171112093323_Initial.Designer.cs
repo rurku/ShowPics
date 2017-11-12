@@ -10,7 +10,7 @@ using System;
 namespace ShowPics.Data.Migrations
 {
     [DbContext(typeof(ShowPicsDbContext))]
-    [Migration("20171112084817_Initial")]
+    [Migration("20171112093323_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,7 +34,7 @@ namespace ShowPics.Data.Migrations
 
                     b.HasIndex("FolderId");
 
-                    b.ToTable("File");
+                    b.ToTable("Files");
                 });
 
             modelBuilder.Entity("ShowPics.Entities.Folder", b =>
@@ -44,7 +44,7 @@ namespace ShowPics.Data.Migrations
 
                     b.Property<string>("Name");
 
-                    b.Property<long>("ParentId");
+                    b.Property<long?>("ParentId");
 
                     b.Property<string>("Path");
 
@@ -66,9 +66,8 @@ namespace ShowPics.Data.Migrations
             modelBuilder.Entity("ShowPics.Entities.Folder", b =>
                 {
                     b.HasOne("ShowPics.Entities.Folder", "Parent")
-                        .WithMany()
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId");
                 });
 #pragma warning restore 612, 618
         }

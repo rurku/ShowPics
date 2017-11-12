@@ -10,7 +10,8 @@ namespace ShowPics.Entities
         public string Path { get; set; }
         public string Name { get; set; }
         public List<File> Files { get; set; }
-        public long ParentId { get; set; }
+        public List<Folder> Children { get; set; }
+        public long? ParentId { get; set; }
         public Folder Parent { get; set; }
     }
 }

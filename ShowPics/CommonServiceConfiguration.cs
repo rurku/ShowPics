@@ -10,6 +10,7 @@ using ShowPics.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
 using System.IO;
+using ShowPics.Data.Abstractions;
 
 namespace ShowPics
 {
@@ -19,11 +20,12 @@ namespace ShowPics
         {
             var configuration = (IConfiguration)services.Single(x => x.ServiceType == typeof(IConfiguration)).ImplementationInstance;
 
-            services.AddSingleton<ICommonServiceConfiguration>(this);
+            // Configuration options
             services.AddOptions();
             var folderSettings = configuration.GetSection("folderSettings");
             services.Configure<FolderSettings>(folderSettings);
-            
+
+            // DbContext
             var connectionStringBuilder = new SqliteConnectionStringBuilder();
             connectionStringBuilder.Cache = SqliteCacheMode.Default;
             connectionStringBuilder.DataSource = Path.Combine(folderSettings.Get<FolderSettings>().ThumbnailsPath, "data.db");
@@ -32,6 +34,9 @@ namespace ShowPics
             {
                 options.UseSqlite(connectionStringBuilder.ConnectionString);
             });
+
+            // DAL
+            services.AddScoped<IFilesData, FilesData>();
         }
     }
 }

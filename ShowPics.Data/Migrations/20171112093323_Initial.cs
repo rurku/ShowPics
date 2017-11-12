@@ -15,7 +15,7 @@ namespace ShowPics.Data.Migrations
                     Id = table.Column<long>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Name = table.Column<string>(type: "TEXT", nullable: true),
-                    ParentId = table.Column<long>(type: "INTEGER", nullable: false),
+                    ParentId = table.Column<long>(type: "INTEGER", nullable: true),
                     Path = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
@@ -26,11 +26,11 @@ namespace ShowPics.Data.Migrations
                         column: x => x.ParentId,
                         principalTable: "Folders",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "File",
+                name: "Files",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "INTEGER", nullable: false)
@@ -41,9 +41,9 @@ namespace ShowPics.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_File", x => x.Id);
+                    table.PrimaryKey("PK_Files", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_File_Folders_FolderId",
+                        name: "FK_Files_Folders_FolderId",
                         column: x => x.FolderId,
                         principalTable: "Folders",
                         principalColumn: "Id",
@@ -51,8 +51,8 @@ namespace ShowPics.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_File_FolderId",
-                table: "File",
+                name: "IX_Files_FolderId",
+                table: "Files",
                 column: "FolderId");
 
             migrationBuilder.CreateIndex(
@@ -64,7 +64,7 @@ namespace ShowPics.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "File");
+                name: "Files");
 
             migrationBuilder.DropTable(
                 name: "Folders");
