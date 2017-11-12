@@ -8,6 +8,7 @@ namespace ShowPics.Settings
     public class FolderSettings
     {
         public List<RootFolderMapping> Folders { get; set; }
+        public string ThumbnailsPath { get; set; }
     }
 
     public class RootFolderMapping

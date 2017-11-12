@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ShowPics.Cli\ShowPics.Cli.csproj" />
+    <ProjectReference Include="..\ShowPics.Data\ShowPics.Data.csproj" />
     <ProjectReference Include="..\ShowPics.Dtos\ShowPics.Dtos.csproj" />
     <ProjectReference Include="..\Utilities\Utilities.csproj" />
   </ItemGroup>
