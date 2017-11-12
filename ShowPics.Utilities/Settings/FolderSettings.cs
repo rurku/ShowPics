@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ShowPics.Settings
+namespace ShowPics.Utilities.Settings
 {
     public class FolderSettings
     {
         public List<RootFolderMapping> Folders { get; set; }
         public string ThumbnailsPath { get; set; }
+        public string ThumbnailsLogicalPrefix { get; set; } = "thumbnails";
+        public string OriginalsLogicalPrefix { get; set; } = "files";
     }
 
     public class RootFolderMapping

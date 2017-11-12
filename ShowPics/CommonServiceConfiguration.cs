@@ -4,13 +4,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using ShowPics.Utilities;
-using ShowPics.Settings;
+using ShowPics.Utilities.Settings;
 using Microsoft.Extensions.Configuration;
 using ShowPics.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
 using System.IO;
 using ShowPics.Data.Abstractions;
+using Microsoft.Extensions.Logging;
 
 namespace ShowPics
 {
@@ -19,7 +20,11 @@ namespace ShowPics
         public void ConfigureServices(IServiceCollection services)
         {
             var configuration = (IConfiguration)services.Single(x => x.ServiceType == typeof(IConfiguration)).ImplementationInstance;
-
+            services.AddLogging(loggingBuilder =>
+            {
+                loggingBuilder.AddConfiguration(configuration.GetSection("Logging"));
+                loggingBuilder.AddConsole();
+            });
             // Configuration options
             services.AddOptions();
             var folderSettings = configuration.GetSection("folderSettings");

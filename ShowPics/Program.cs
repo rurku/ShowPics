@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ShowPics.Utilities;
 using ShowPics.Data;
 using Microsoft.EntityFrameworkCore;
+using ShowPics.Cli;
 
 namespace ShowPics
 {
@@ -31,14 +32,18 @@ namespace ShowPics
 
         public static IServiceCollection BuildServiceCollection()
         {
+            var environment = new RuntimeEnvironment(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production");
+
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true)
+                .AddJsonFile($"appsettings.{environment.Name}.json", optional: true)
                 .Build();
 
             var serviceCollection = new ServiceCollection();
 
             serviceCollection.AddSingleton<IConfiguration>(config);
+            serviceCollection.AddSingleton<IRuntimeEnvironment>(environment);
 
             var commonConfiguration = new CommonServiceConfiguration();
             serviceCollection.AddSingleton<ICommonServiceConfiguration>(commonConfiguration);
@@ -51,7 +56,8 @@ namespace ShowPics
         {
             var commands = new ICliCommand[]
             {
-                new HostCommand()
+                new HostCommand(),
+                new ConvertCommand()
             };
 
             foreach (var command in commands)

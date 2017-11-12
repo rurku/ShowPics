@@ -10,11 +10,14 @@ namespace ShowPics.Data.Abstractions
     public interface IFilesData
     {
         Task<ICollection<Folder>> GetAllAsync(CancellationToken cancellationToken = default(CancellationToken));
+        ICollection<Folder> GetAll();
         void Remove(File file);
         void Remove(Folder folder);
         void Add(File file);
         void Add(Folder folder);
-        void SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken));
+        Task SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken));
+        void SaveChanges();
         Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default(CancellationToken));
+        ITransaction BeginTransaction();
     }
 }

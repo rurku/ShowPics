@@ -27,9 +27,19 @@ namespace ShowPics.Data
             _dbContext.Folders.Add(folder);
         }
 
+        public ITransaction BeginTransaction()
+        {
+            return new Transaction(_dbContext.Database.BeginTransaction());
+        }
+
         public async Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             return new Transaction(await _dbContext.Database.BeginTransactionAsync(cancellationToken));
+        }
+
+        public ICollection<Folder> GetAll()
+        {
+            return _dbContext.Folders.Include(x => x.Files).ToListAsync().Result;
         }
 
         public async Task<ICollection<Folder>> GetAllAsync(CancellationToken cancellationToken = default(CancellationToken))
@@ -47,9 +57,14 @@ namespace ShowPics.Data
             _dbContext.Folders.Remove(folder);
         }
 
-        public void SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public void SaveChanges()
         {
-            _dbContext.SaveChangesAsync(cancellationToken);
+            throw new NotImplementedException();
+        }
+
+        public async Task SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken))
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 }

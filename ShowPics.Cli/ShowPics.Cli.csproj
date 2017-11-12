@@ -4,4 +4,10 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ShowPics.Data.Abstractions\ShowPics.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\ShowPics.Entities\ShowPics.Entities.csproj" />
+    <ProjectReference Include="..\ShowPics.Utilities\ShowPics.Utilities.csproj" />
+  </ItemGroup>
+
 </Project>

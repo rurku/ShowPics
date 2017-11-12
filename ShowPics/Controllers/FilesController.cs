@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ShowPics.Dtos;
 using Microsoft.Extensions.Options;
-using ShowPics.Settings;
+using ShowPics.Utilities.Settings;
 using System.IO;
 
 namespace ShowPics.Controllers
