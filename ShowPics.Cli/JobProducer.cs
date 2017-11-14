@@ -11,6 +11,7 @@ using ShowPics.Entities;
 using Microsoft.Extensions.DependencyInjection;
 using ShowPics.Data.Abstractions;
 using ShowPics.Utilities;
+using System.Text.RegularExpressions;
 
 namespace ShowPics.Cli
 {
@@ -32,6 +33,12 @@ namespace ShowPics.Cli
         private string[] _filesToKeep =
             {
                 "data.db"
+            };
+
+        private string[] _imageFileTypes =
+            {
+                ".jpg$",
+                ".JPG$",
             };
 
 
@@ -118,9 +125,11 @@ namespace ShowPics.Cli
                 {
                     if (nodeType == NodeType.Folder)
                         return true;
+                    if (!_imageFileTypes.Any(x => Regex.IsMatch(logicalPath, x)))
+                        return false;
                     if (!metadataByOriginalPath.ContainsKey(logicalPath))
                     {
-                        queue.Enqueue(new CreateFile(logicalPath));
+                        queue.Enqueue(new CreateOrUpdateFile(logicalPath));
                         return false;
                     }
                     var physicalPath = _pathHelper.GetPhysicalPath(logicalPath);

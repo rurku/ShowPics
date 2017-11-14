@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-ci0161" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ShowPics.Data.Abstractions\ShowPics.Data.Abstractions.csproj" />
     <ProjectReference Include="..\ShowPics.Entities\ShowPics.Entities.csproj" />
     <ProjectReference Include="..\ShowPics.Utilities\ShowPics.Utilities.csproj" />

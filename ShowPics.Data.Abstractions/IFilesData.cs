@@ -20,5 +20,6 @@ namespace ShowPics.Data.Abstractions
         Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default(CancellationToken));
         ITransaction BeginTransaction();
         Folder GetFolder(string logicalPath);
+        File GetFile(string logicalPath);
     }
 }

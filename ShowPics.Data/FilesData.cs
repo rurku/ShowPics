@@ -47,6 +47,11 @@ namespace ShowPics.Data
             return await _dbContext.Folders.Include(x => x.Files).ToListAsync(cancellationToken);
         }
 
+        public File GetFile(string logicalPath)
+        {
+            return _dbContext.Files.SingleOrDefaultAsync(x => x.Path == logicalPath).Result;
+        }
+
         public Folder GetFolder(string logicalPath)
         {
             return _dbContext.Folders.SingleOrDefaultAsync(x => x.Path == logicalPath).Result;
