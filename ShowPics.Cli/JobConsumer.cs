@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using ShowPics.Cli.Executors;
 using ShowPics.Cli.Jobs;
 using System;
 using System.Collections.Generic;
@@ -26,10 +25,9 @@ namespace ShowPics.Cli
             {
                 using (var serviceScope = _serviceProvider.CreateScope())
                 {
-                    var serviceType = typeof(JobExecutor<>).MakeGenericType(job.GetType());
-                    var executor = serviceScope.ServiceProvider.GetService(serviceType);
-                    var executeMethod = serviceType.GetMethod("Execute");
-                    executeMethod.Invoke(executor, new object[] { job });
+                    _logger.LogInformation($"Executing: {job.Description}");
+                    job.Execute(serviceScope.ServiceProvider);
+                    _logger.LogInformation($"Done:      {job.Description}");
                 }
             }
         }

@@ -26,7 +26,6 @@ namespace ShowPics.Cli
             T result;
             _readSemaphore.WaitOne();
             _queue.TryDequeue(out result); // ignore return value because semaphores guarantee that there will always be something in the queue
-            _logger.LogDebug($"Dequeue: {((IJob)result)?.Description}");
             _writeSemaphore.Release();
             return result;
         }
@@ -34,7 +33,6 @@ namespace ShowPics.Cli
         public void Enqueue(T item)
         {
             _writeSemaphore.WaitOne();
-            _logger.LogDebug($"Enqueue: {((IJob)item)?.Description}");
             _queue.Enqueue(item);
             _readSemaphore.Release();
         }

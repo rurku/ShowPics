@@ -1,7 +1,9 @@
-﻿using ShowPics.Entities;
+﻿using ShowPics.Data.Abstractions;
+using ShowPics.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ShowPics.Cli.Jobs
 {
@@ -14,5 +16,12 @@ namespace ShowPics.Cli.Jobs
         public string Description => $"Remove file '{File.Path}' from DB";
 
         public File File { get; }
+
+        public void Execute(IServiceProvider serviceProvider)
+        {
+            var data = serviceProvider.GetService<IFilesData>();
+            data.Remove(File);
+            data.SaveChanges();
+        }
     }
 }

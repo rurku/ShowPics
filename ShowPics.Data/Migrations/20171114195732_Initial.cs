@@ -36,8 +36,10 @@ namespace ShowPics.Data.Migrations
                     Id = table.Column<long>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     FolderId = table.Column<long>(type: "INTEGER", nullable: false),
+                    ModificationTimestamp = table.Column<DateTime>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: true),
-                    Path = table.Column<string>(type: "TEXT", nullable: true)
+                    Path = table.Column<string>(type: "TEXT", nullable: true),
+                    ThumbnailPath = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {

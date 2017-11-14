@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace ShowPics.Cli.Jobs
@@ -14,5 +15,10 @@ namespace ShowPics.Cli.Jobs
         public string PhysicalPath { get; }
 
         public string Description => $"Remove folder '{PhysicalPath}' from filesysem";
+
+        public void Execute(IServiceProvider serviceProvider)
+        {
+            Directory.Delete(PhysicalPath, true);
+        }
     }
 }

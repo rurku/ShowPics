@@ -5,9 +5,9 @@ using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using ShowPics.Cli.Jobs;
 using Microsoft.Extensions.Logging;
-using ShowPics.Cli.Executors;
 using System.Linq;
 using System.Threading.Tasks;
+using ShowPics.Utilities;
 
 namespace ShowPics.Cli
 {
@@ -25,14 +25,8 @@ namespace ShowPics.Cli
         {
             services.AddTransient<SynchronizedQueue<IJob>>();
             services.AddTransient<JobProducer>();
-            services.AddTransient<JobExecutor<CreateFile>, DummyJobExecutor<CreateFile>>();
-            services.AddTransient<JobExecutor<CreateFolder>, DummyJobExecutor<CreateFolder>>();
-            services.AddTransient<JobExecutor<RemoveFileFromDb>, DummyJobExecutor<RemoveFileFromDb>>();
-            services.AddTransient<JobExecutor<RemoveFileFromDisk>, DummyJobExecutor<RemoveFileFromDisk>>();
-            services.AddTransient<JobExecutor<RemoveFolderFromDb>, DummyJobExecutor<RemoveFolderFromDb>>();
-            services.AddTransient<JobExecutor<RemoveFolderFromDisk>, DummyJobExecutor<RemoveFolderFromDisk>>();
-            services.AddTransient<JobExecutor<UpdateFile>, DummyJobExecutor<UpdateFile>>();
             services.AddTransient<JobConsumer>();
+            services.AddSingleton<PathHelper>();
         }
 
         public void Run(string[] args, IServiceProvider serviceProvider)

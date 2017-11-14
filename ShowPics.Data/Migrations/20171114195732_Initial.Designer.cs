@@ -4,13 +4,14 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Storage.Internal;
 using ShowPics.Data;
 using System;
 
 namespace ShowPics.Data.Migrations
 {
     [DbContext(typeof(ShowPicsDbContext))]
-    [Migration("20171112093323_Initial")]
+    [Migration("20171114195732_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,9 +27,13 @@ namespace ShowPics.Data.Migrations
 
                     b.Property<long>("FolderId");
 
+                    b.Property<DateTime>("ModificationTimestamp");
+
                     b.Property<string>("Name");
 
                     b.Property<string>("Path");
+
+                    b.Property<string>("ThumbnailPath");
 
                     b.HasKey("Id");
 

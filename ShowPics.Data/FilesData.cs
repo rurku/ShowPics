@@ -47,6 +47,11 @@ namespace ShowPics.Data
             return await _dbContext.Folders.Include(x => x.Files).ToListAsync(cancellationToken);
         }
 
+        public Folder GetFolder(string logicalPath)
+        {
+            return _dbContext.Folders.SingleOrDefaultAsync(x => x.Path == logicalPath).Result;
+        }
+
         public void Remove(File file)
         {
             _dbContext.Files.Remove(file);
@@ -59,7 +64,7 @@ namespace ShowPics.Data
 
         public void SaveChanges()
         {
-            throw new NotImplementedException();
+            _dbContext.SaveChanges();
         }
 
         public async Task SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken))

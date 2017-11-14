@@ -13,5 +13,10 @@ namespace ShowPics.Cli.Jobs
         public string Description => $"Create file '{LogicalPath}'";
 
         public string LogicalPath { get; }
+
+        public void Execute(IServiceProvider serviceProvider)
+        {
+            //throw new NotImplementedException();
+        }
     }
 }
