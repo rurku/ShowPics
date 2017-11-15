@@ -1,5 +1,5 @@
 <div>
-    <img *ngFor="let file of getFiles()" src="{{fileService.getUri(file.path)}}" class="img-thumbnail" style="height:200px" (click)="onSelect(file)" />
+    <img *ngFor="let file of getFiles()" src="{{file.thumbnailPath}}" class="img-thumbnail" style="height:200px" (click)="onSelect(file)" />
     <br/>
     thumbnails works!
 </div>

@@ -42,6 +42,9 @@ namespace ShowPics
 
             // DAL
             services.AddScoped<IFilesData, FilesData>();
+
+            services.AddSingleton<PathHelper>();
+
         }
     }
 }

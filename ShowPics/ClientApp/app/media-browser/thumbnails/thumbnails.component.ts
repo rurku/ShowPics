@@ -27,7 +27,7 @@ export class ThumbnailsComponent implements OnInit {
     var items : PhotoSwipe.Item[] = this.getFiles().map(f =>
       {
         return {
-          src: this.fileService.getUri(f.path),
+          src: f.path,
           w: f.width,
           h: f.height
         } as PhotoSwipe.Item;

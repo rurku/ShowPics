@@ -11,5 +11,6 @@ namespace ShowPics.Dtos
         public string ContentType;
         public int Width;
         public int Height;
+        public string ThumbnailPath;
     }
 }

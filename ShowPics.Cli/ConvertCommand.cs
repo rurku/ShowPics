@@ -26,7 +26,6 @@ namespace ShowPics.Cli
             services.AddTransient<SynchronizedQueue<IJob>>();
             services.AddTransient<JobProducer>();
             services.AddTransient<JobConsumer>();
-            services.AddSingleton<PathHelper>();
         }
 
         public void Run(string[] args, IServiceProvider serviceProvider)

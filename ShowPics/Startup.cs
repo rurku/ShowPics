@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SpaServices.Webpack;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using ShowPics.Utilities.Settings;
+using Microsoft.Extensions.FileProviders;
 
 namespace ShowPics
 {
@@ -26,7 +29,7 @@ namespace ShowPics
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IOptions<FolderSettings> folderSettings)
         {
             if (env.IsDevelopment())
             {
@@ -42,6 +45,21 @@ namespace ShowPics
             }
 
             app.UseStaticFiles();
+
+            app.UseStaticFiles(new StaticFileOptions()
+            {
+                RequestPath = "/" + folderSettings.Value.ThumbnailsLogicalPrefix,
+                FileProvider = new PhysicalFileProvider(folderSettings.Value.ThumbnailsPath)
+            });
+
+            foreach (var folderSetting in folderSettings.Value.Folders)
+            {
+                app.UseStaticFiles(new StaticFileOptions()
+                {
+                    RequestPath = "/" + folderSettings.Value.OriginalsLogicalPrefix + "/" + folderSetting.Name,
+                    FileProvider = new PhysicalFileProvider(folderSetting.PhysicalPath)
+                });
+            }
 
             app.UseMvc(routes =>
             {

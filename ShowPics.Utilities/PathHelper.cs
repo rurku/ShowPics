@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 
 namespace ShowPics.Utilities
@@ -65,6 +66,11 @@ namespace ShowPics.Utilities
             if (split.Length == 0)
                 return "";
             return split.Last();
+        }
+
+        public string PathToUrl(string logicalPath)
+        {
+            return "/" + Uri.EscapeUriString(logicalPath);
         }
     }
 }
