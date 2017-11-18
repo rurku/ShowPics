@@ -1,6 +1,6 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FileService } from '../file.service';
-import { FileSystemObject } from '../file-service-dtos';
+import { FileSystemObject, FileSystemObjectTypes } from '../file-service-dtos';
 import { TREE_ACTIONS, KEYS, IActionMapping, ITreeOptions } from 'angular-tree-component';
 
 @Component({
@@ -13,7 +13,8 @@ export class TreeComponent implements OnInit {
   tree: FileSystemObject[];
 
   options: ITreeOptions = {
-    idField: 'path'
+    idField: 'path',
+    childrenField: 'subfolders'
   }
 
 
@@ -22,7 +23,15 @@ export class TreeComponent implements OnInit {
   constructor(private fileService: FileService) { }
 
   getTree(): void {
-    this.fileService.getFiles().then(fso => this.tree = fso.children);
+    this.fileService.getFiles().then(fso => {
+      this.fillSubfolders(fso);
+      this.tree = fso.children
+    });
+  }
+
+  fillSubfolders(fso: FileSystemObject) {
+    fso.subfolders = fso.children.filter(x => x.type === FileSystemObjectTypes.DIRECTORY);
+    fso.subfolders.forEach(x => this.fillSubfolders(x));
   }
 
   ngOnInit() {

@@ -7,6 +7,7 @@ export class FileSystemObject {
   contentType: string;
   width: number;
   height: number;
+  subfolders: FileSystemObject[];
 }
 
 export class FileSystemObjectTypes {
