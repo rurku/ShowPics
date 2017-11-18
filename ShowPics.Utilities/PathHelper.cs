@@ -43,11 +43,14 @@ namespace ShowPics.Utilities
             throw new Exception($"Could not map logical path '{logicalPath}' to physical path.");
         }
 
-        public string GetThumbnailPath(string originalPath)
+        public string GetThumbnailPath(string originalPath, bool isFile)
         {
             if ((originalPath + "/").StartsWith(_folderSettings.Value.OriginalsLogicalPrefix + "/"))
             {
-                return JoinLogicalPaths(_folderSettings.Value.ThumbnailsLogicalPrefix, originalPath.Substring(_folderSettings.Value.OriginalsLogicalPrefix.Length).TrimStart('/'));
+                var path = JoinLogicalPaths(_folderSettings.Value.ThumbnailsLogicalPrefix, originalPath.Substring(_folderSettings.Value.OriginalsLogicalPrefix.Length).TrimStart('/'));
+                if (isFile)
+                    path += ".jpg";
+                return path;
             }
             throw new Exception($"Could not map original path '{originalPath}' to thumbnail path.");
         }

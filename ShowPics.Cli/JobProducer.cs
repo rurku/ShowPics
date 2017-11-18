@@ -35,11 +35,6 @@ namespace ShowPics.Cli
                 "data.db"
             };
 
-        private string[] _imageFileTypes =
-            {
-                ".jpg$",
-                ".JPG$",
-            };
 
 
         public JobProducer(ILogger<JobProducer> logger, IOptions<FolderSettings> folderSettings, PathHelper pathHelper, IServiceProvider serviceProvider)
@@ -59,7 +54,7 @@ namespace ShowPics.Cli
                 var data = scope.ServiceProvider.GetService<IFilesData>();
                 foreach (var folder in data.GetAll())
                 {
-                    _metadataFolderPaths.Add(_pathHelper.GetThumbnailPath(folder.Path));
+                    _metadataFolderPaths.Add(_pathHelper.GetThumbnailPath(folder.Path, false));
                     foreach (var file in folder.Files)
                         _metadataFilePaths.Add(file.ThumbnailPath);
                 }
@@ -125,7 +120,7 @@ namespace ShowPics.Cli
                 {
                     if (nodeType == NodeType.Folder)
                         return true;
-                    if (!_imageFileTypes.Any(x => Regex.IsMatch(logicalPath, x)))
+                    if (!CreateOrUpdateFile.IsFormatSupported(logicalPath))
                         return false;
                     if (!metadataByOriginalPath.ContainsKey(logicalPath))
                     {
@@ -134,7 +129,7 @@ namespace ShowPics.Cli
                     }
                     var physicalPath = _pathHelper.GetPhysicalPath(logicalPath);
                     if (System.IO.File.GetLastWriteTime(physicalPath) != metadataByOriginalPath[logicalPath].ModificationTimestamp)
-                        queue.Enqueue(new UpdateFile(logicalPath));
+                        queue.Enqueue(new CreateOrUpdateFile(logicalPath));
 
                     return false;
                 }, false);

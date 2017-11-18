@@ -6,6 +6,8 @@ using ShowPics.Utilities;
 using SixLabors.ImageSharp;
 using System.IO;
 using ShowPics.Data.Abstractions;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace ShowPics.Cli.Jobs
 {
@@ -15,7 +17,18 @@ namespace ShowPics.Cli.Jobs
         {
             LogicalPath = logicalPath;
         }
-        public string Description => $"Create file '{LogicalPath}'";
+        public string Description => $"Create or update file '{LogicalPath}'";
+
+        private static readonly string[] _imageFileTypes =
+        {
+            ".jpg$",
+            ".png$",
+            ".gif$",
+            ".bmp$"
+        };
+
+        public static bool IsFormatSupported(string logicalPath) 
+            => _imageFileTypes.Any(x => Regex.IsMatch(logicalPath, x, RegexOptions.IgnoreCase));
 
         public string LogicalPath { get; }
 
@@ -23,7 +36,7 @@ namespace ShowPics.Cli.Jobs
         {
             var pathHelper = serviceProvider.GetService<PathHelper>();
             var originalPhysicalPath = pathHelper.GetPhysicalPath(LogicalPath);
-            var thumbnailPath = pathHelper.GetThumbnailPath(LogicalPath);
+            var thumbnailPath = pathHelper.GetThumbnailPath(LogicalPath, true);
             var thumbnailPhysicalPath = pathHelper.GetPhysicalPath(thumbnailPath);
 
             var data = serviceProvider.GetService<IFilesData>();
@@ -41,7 +54,7 @@ namespace ShowPics.Cli.Jobs
                 var desiredHeight = 200;
                 var desiredWidth = image.Width * desiredHeight / image.Height;
                 image.Mutate(x => x.Resize(desiredWidth, desiredHeight));
-                image.Save(thumbnailPhysicalPath);
+                image.Save(thumbnailPhysicalPath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder());
             }
 
             if (file.Id == 0)

@@ -24,7 +24,7 @@ namespace ShowPics.Cli.Jobs
         {
             var data = serviceProvider.GetService<IFilesData>();
             var pathHelper = serviceProvider.GetService<PathHelper>();
-            var physicalPath = pathHelper.GetPhysicalPath(pathHelper.GetThumbnailPath(LogicalPath));
+            var physicalPath = pathHelper.GetPhysicalPath(pathHelper.GetThumbnailPath(LogicalPath, false));
             serviceProvider.GetService<ILogger<CreateFolder>>().LogInformation("Creating folder {name}", physicalPath);
             Directory.CreateDirectory(physicalPath);
             var parentPath = pathHelper.GetParentPath(LogicalPath);

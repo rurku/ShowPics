@@ -11,6 +11,7 @@ namespace ShowPics.Utilities.Settings
         public string ThumbnailsPath { get; set; }
         public string ThumbnailsLogicalPrefix { get; set; } = "thumbnails";
         public string OriginalsLogicalPrefix { get; set; } = "files";
+        public int ConvertionThreads { get; set; } = 1;
     }
 
     public class RootFolderMapping

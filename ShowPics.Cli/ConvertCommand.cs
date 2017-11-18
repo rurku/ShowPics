@@ -8,6 +8,8 @@ using Microsoft.Extensions.Logging;
 using System.Linq;
 using System.Threading.Tasks;
 using ShowPics.Utilities;
+using Microsoft.Extensions.Options;
+using ShowPics.Utilities.Settings;
 
 namespace ShowPics.Cli
 {
@@ -35,10 +37,13 @@ namespace ShowPics.Cli
 
             var producer = serviceProvider.GetService<JobProducer>();
 
-            RunPipleline(4, producer, jobQueue, serviceProvider, (p, q) => p.RemoveNonExistingFromDb(q));
-            RunPipleline(4, producer, jobQueue, serviceProvider, (p, q) => p.RemoveNonExistingFromDisk(q));
+            var threadCount = serviceProvider.GetService<IOptions<FolderSettings>>().Value.ConvertionThreads;
+
+            RunPipleline(threadCount, producer, jobQueue, serviceProvider, (p, q) => p.RemoveNonExistingFromDb(q));
+            RunPipleline(threadCount, producer, jobQueue, serviceProvider, (p, q) => p.RemoveNonExistingFromDisk(q));
+            // Folder creation must be done sequentially because parent must exist in db before creating child
             RunPipleline(1, producer, jobQueue, serviceProvider, (p, q) => p.CreateFolders(q));
-            RunPipleline(4, producer, jobQueue, serviceProvider, (p, q) => p.CreateOrUpdateThumbs(q));
+            RunPipleline(threadCount, producer, jobQueue, serviceProvider, (p, q) => p.CreateOrUpdateThumbs(q));
         }
 
         void RunPipleline(int executorCount, JobProducer producer, SynchronizedQueue<IJob> queue, IServiceProvider serviceProvider, Action<JobProducer, SynchronizedQueue<IJob>> action)
