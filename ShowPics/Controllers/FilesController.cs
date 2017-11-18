@@ -43,7 +43,7 @@ namespace ShowPics.Controllers
                 {
                     Name = "",
                     Path = "/",
-                    Children = folders.Where(x => x.ParentId == null).Select(x => MapToDto(x)).ToList()
+                    Children = folders.OrderBy(x => x.Name).Where(x => x.ParentId == null).Select(x => MapToDto(x)).ToList()
                 });
             }
             else
@@ -78,7 +78,7 @@ namespace ShowPics.Controllers
             {
                 Path = _pathHelper.PathToUrl(folder.Path),
                 Name = folder.Name,
-                Children = folder.Children.Select(MapToDto).Union(folder.Files.Select(MapToDto)).ToList()
+                Children = folder.Children.OrderBy(x => x.Name).Select(MapToDto).Union(folder.Files.OrderBy(x => x.OriginalCreationTime ?? x.ModificationTimestamp).Select(MapToDto)).ToList()
             };
         }
     }

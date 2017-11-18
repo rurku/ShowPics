@@ -13,6 +13,7 @@ namespace ShowPics.Entities
         public long FolderId { get; set; }
         public Folder Folder { get; set; }
         public DateTime ModificationTimestamp { get; set; }
+        public DateTime? OriginalCreationTime { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
     }

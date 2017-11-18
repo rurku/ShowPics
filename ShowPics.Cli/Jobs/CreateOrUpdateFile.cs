@@ -8,6 +8,8 @@ using System.IO;
 using ShowPics.Data.Abstractions;
 using System.Linq;
 using System.Text.RegularExpressions;
+using SixLabors.ImageSharp.MetaData;
+using System.Globalization;
 
 namespace ShowPics.Cli.Jobs
 {
@@ -51,6 +53,7 @@ namespace ShowPics.Cli.Jobs
             {
                 file.Width = image.Width;
                 file.Height = image.Height;
+                file.OriginalCreationTime = GetOriginalCreationDate(image.MetaData);
                 var desiredHeight = 200;
                 var desiredWidth = image.Width * desiredHeight / image.Height;
                 image.Mutate(x => x.Resize(desiredWidth, desiredHeight));
@@ -63,6 +66,17 @@ namespace ShowPics.Cli.Jobs
                 data.Add(file);
             }
             data.SaveChanges();
+        }
+
+        private DateTime? GetOriginalCreationDate(ImageMetaData metaData)
+        {
+            var dateString = metaData?.ExifProfile?.Values?.SingleOrDefault(x => x.Tag == SixLabors.ImageSharp.MetaData.Profiles.Exif.ExifTag.DateTimeOriginal)?.Value as string;
+            if (string.IsNullOrEmpty(dateString))
+                return null;
+            DateTime dateTime;
+            if (DateTime.TryParseExact(dateString, "yyyy:MM:dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+                return dateTime;
+            return null;
         }
     }
 }
