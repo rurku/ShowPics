@@ -184,7 +184,9 @@ namespace ShowPics.Cli
                             return false;
                         }
                         var physicalPath = _pathHelper.GetPhysicalPath(logicalPath);
-                        if (System.IO.File.GetLastWriteTime(physicalPath) != metadataByOriginalPath[logicalPath].ModificationTimestamp)
+                        var fileTimestamp = System.IO.File.GetLastWriteTime(physicalPath);
+                        // Drop any precision beyond seconds
+                        if (new DateTime(fileTimestamp.Year, fileTimestamp.Month, fileTimestamp.Day, fileTimestamp.Hour, fileTimestamp.Minute, fileTimestamp.Second) != metadataByOriginalPath[logicalPath].ModificationTimestamp)
                         {
                             toUpdate++;
                             queue.Enqueue(new CreateOrUpdateFile(logicalPath));

@@ -43,8 +43,8 @@ namespace ShowPics.Cli.Jobs
 
             var data = serviceProvider.GetService<IFilesData>();
             var file = data.GetFile(LogicalPath) ?? new Entities.File();
-
-            file.ModificationTimestamp = File.GetLastWriteTime(originalPhysicalPath);
+            var fileTimestamp = File.GetLastWriteTime(originalPhysicalPath);
+            file.ModificationTimestamp = new DateTime(fileTimestamp.Year, fileTimestamp.Month, fileTimestamp.Day, fileTimestamp.Hour, fileTimestamp.Minute, fileTimestamp.Second);
             file.Name = pathHelper.GetName(LogicalPath);
             file.Path = LogicalPath;
             file.ThumbnailPath = thumbnailPath;
