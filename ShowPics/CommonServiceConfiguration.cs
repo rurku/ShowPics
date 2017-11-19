@@ -12,6 +12,9 @@ using Microsoft.Data.Sqlite;
 using System.IO;
 using ShowPics.Data.Abstractions;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Filters;
+using Serilog.Events;
 
 namespace ShowPics
 {
@@ -20,10 +23,14 @@ namespace ShowPics
         public void ConfigureServices(IServiceCollection services)
         {
             var configuration = (IConfiguration)services.Single(x => x.ServiceType == typeof(IConfiguration)).ImplementationInstance;
+
+            var logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(configuration)
+                .CreateLogger();
+
             services.AddLogging(loggingBuilder =>
             {
-                loggingBuilder.AddConfiguration(configuration.GetSection("Logging"));
-                loggingBuilder.AddConsole(c => c.IncludeScopes = true);
+                loggingBuilder.AddSerilog(logger, dispose: true);
             });
             // Configuration options
             services.AddOptions();

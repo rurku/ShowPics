@@ -107,7 +107,7 @@ namespace ShowPics.Cli
         public void RemoveNonExistingFromDb(ISynchronizedQueue<IJob> queue)
         {
             _logger.LogInformation("Cleaning database");
-            using (_logger.BeginScope("CleanThumbnails"))
+            using (_logger.BeginScope("CleanDb"))
             {
                 _logger.LogInformation("Iterating over file system objects in original folders");
                 var visited = 0;
