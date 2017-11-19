@@ -4,6 +4,7 @@ using ShowPics.Cli.Jobs;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace ShowPics.Cli
 {
@@ -26,10 +27,18 @@ namespace ShowPics.Cli
                 using (var serviceScope = _serviceProvider.CreateScope())
                 {
                     _logger.LogInformation($"Executing: {job.Description}");
-                    job.Execute(serviceScope.ServiceProvider);
+                    try
+                    {
+                        job.Execute(serviceScope.ServiceProvider);
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError(e, $"Failed:    {job.Description}");
+                    }
                     _logger.LogInformation($"Done:      {job.Description}");
                 }
             }
+            _logger.LogInformation($"Consumer thread {Thread.CurrentThread.ManagedThreadId} finished.");
         }
     }
 }

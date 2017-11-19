@@ -23,7 +23,7 @@ namespace ShowPics
             services.AddLogging(loggingBuilder =>
             {
                 loggingBuilder.AddConfiguration(configuration.GetSection("Logging"));
-                loggingBuilder.AddConsole();
+                loggingBuilder.AddConsole(c => c.IncludeScopes = true);
             });
             // Configuration options
             services.AddOptions();

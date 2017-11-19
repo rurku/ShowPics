@@ -23,6 +23,8 @@ namespace ShowPics.Cli
 
         public T Dequeue()
         {
+            while (System.IO.File.Exists("pause"))
+                Thread.Sleep(1000);
             T result;
             _readSemaphore.WaitOne();
             _queue.TryDequeue(out result); // ignore return value because semaphores guarantee that there will always be something in the queue
