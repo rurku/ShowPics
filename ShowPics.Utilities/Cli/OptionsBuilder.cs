@@ -37,6 +37,17 @@ namespace ShowPics.Utilities.Cli
 
     public interface ICliOptionsBuilder
     {
+        /// <summary>
+        /// Configure a command line option
+        /// </summary>
+        /// <param name="template">Option template</param>
+        /// <param name="description">Description to be shown in help</param>
+        /// <param name="optionType">Option type</param>
+        /// <param name="callback">
+        ///     Callback delegate which will be executed after parsing the commandline. 
+        ///     <para>Use it to read the option value. The callback is executed even if the option is not used.</para>
+        /// </param>
+        /// <param name="configuration">Additional option configuration action</param>
         void Option(string template, string description, CommandOptionType optionType, Action<CommandOption> callback, Action<CommandOption> configuration = null);
     }
 }
