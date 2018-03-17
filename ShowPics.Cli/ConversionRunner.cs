@@ -1,23 +1,22 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ShowPics.Cli.Jobs;
+using ShowPics.Data.Abstractions;
+using ShowPics.Entities;
+using ShowPics.Utilities;
 using ShowPics.Utilities.Settings;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Linq;
-using ShowPics.Entities;
-using Microsoft.Extensions.DependencyInjection;
-using ShowPics.Data.Abstractions;
-using ShowPics.Utilities;
-using System.Text.RegularExpressions;
+using System.Text;
 
 namespace ShowPics.Cli
 {
-    public class JobProducer
+    public class ConversionRunner
     {
-        private ILogger<JobProducer> _logger;
+        private ILogger<ConversionRunner> _logger;
         private IOptions<FolderSettings> _folderSettings;
         private readonly PathHelper _pathHelper;
         private IServiceProvider _serviceProvider;
@@ -28,7 +27,7 @@ namespace ShowPics.Cli
         private HashSet<string> _metadataFolderPaths = new HashSet<string>();
         private HashSet<string> _metadataFilePaths = new HashSet<string>();
 
-        
+
 
         private string[] _filesToKeep =
             {
@@ -37,17 +36,15 @@ namespace ShowPics.Cli
 
 
 
-        public JobProducer(ILogger<JobProducer> logger, IOptions<FolderSettings> folderSettings, PathHelper pathHelper, IServiceProvider serviceProvider)
+        public ConversionRunner(ILogger<ConversionRunner> logger, IOptions<FolderSettings> folderSettings, PathHelper pathHelper, IServiceProvider serviceProvider)
         {
             _logger = logger;
             _folderSettings = folderSettings;
             _pathHelper = pathHelper;
             _serviceProvider = serviceProvider;
-
-
         }
 
-        public void RemoveNonExistingFromDisk(ISynchronizedQueue<IJob> queue)
+        public void RemoveNonExistingFromDisk()
         {
             _logger.LogInformation("Cleaning thumbnails directory");
             using (_logger.BeginScope("CleanThumbnails"))
@@ -69,8 +66,8 @@ namespace ShowPics.Cli
 
                 _logger.LogInformation("Iterating over file system objects in thumbnails folder");
                 var visited = 0;
-                var filesToRemove = 0;
-                var foldersToRemove = 0;
+                var filesRemoved = 0;
+                var foldersRemoved = 0;
                 var lastProgressReport = DateTime.UtcNow;
                 ForEachFileSystemNode(_folderSettings.Value.ThumbnailsLogicalPrefix,
                 (logicalPath, nodeType) =>
@@ -87,24 +84,27 @@ namespace ShowPics.Cli
                         var physicalPath = _pathHelper.GetPhysicalPath(logicalPath);
                         if (_filesToKeep.Contains(Path.GetFileName(physicalPath)))
                             return false;
-                        filesToRemove++;
-                        queue.Enqueue(new RemoveFileFromDisk(_pathHelper.GetPhysicalPath(logicalPath)));
+                        _logger.LogInformation("Removing file '{FILE}' from disk.", physicalPath);
+                        System.IO.File.Delete(physicalPath);
+                        filesRemoved++;
                         return false;
                     }
                     else if (nodeType == NodeType.Folder && !_metadataFolderPaths.Contains(logicalPath))
                     {
-                        foldersToRemove++;
-                        queue.Enqueue(new RemoveFolderFromDisk(_pathHelper.GetPhysicalPath(logicalPath)));
+                        var physicalPath = _pathHelper.GetPhysicalPath(logicalPath);
+                        _logger.LogInformation("Removing folder '{FOLDER}' from disk.", physicalPath);
+                        Directory.Delete(physicalPath, recursive: true);
+                        foldersRemoved++;
                         return false;
                     }
                     return true;
                 }, false);
-                _logger.LogInformation("Visited {TOTAL} objects, folders to remove: {FOLDERS}, files to remove: {FILES}.", visited, foldersToRemove, filesToRemove);
+                _logger.LogInformation("Visited {TOTAL} objects, folders removed: {FOLDERS}, files removed: {FILES}.", visited, foldersRemoved, filesRemoved);
             }
 
         }
 
-        public void RemoveNonExistingFromDb(ISynchronizedQueue<IJob> queue)
+        public void RemoveNonExistingFromDb()
         {
             _logger.LogInformation("Cleaning database");
             using (_logger.BeginScope("CleanDb"))
@@ -113,20 +113,20 @@ namespace ShowPics.Cli
                 var visited = 0;
                 var lastProgressReport = DateTime.UtcNow;
                 ForEachFileSystemNode(_folderSettings.Value.OriginalsLogicalPrefix,
-                (logicalPath, nodeType) =>
-                {
-                    if (DateTime.UtcNow - lastProgressReport > new TimeSpan(0, 0, 10))
+                    (logicalPath, nodeType) =>
                     {
-                        _logger.LogInformation("Objects visited: {VISITED}", visited);
-                        lastProgressReport = DateTime.UtcNow;
-                    }
-                    visited++;
-                    if (nodeType == NodeType.File)
-                        _originFilePaths.Add(logicalPath);
-                    else
-                        _originFolderPaths.Add(logicalPath);
-                    return true;
-                }, false);
+                        if (DateTime.UtcNow - lastProgressReport > new TimeSpan(0, 0, 10))
+                        {
+                            _logger.LogInformation("Objects visited: {VISITED}", visited);
+                            lastProgressReport = DateTime.UtcNow;
+                        }
+                        visited++;
+                        if (nodeType == NodeType.File)
+                            _originFilePaths.Add(logicalPath);
+                        else
+                            _originFolderPaths.Add(logicalPath);
+                        return true;
+                    }, includingRoot: false);
                 _logger.LogInformation("Found {FILES} files and {FOLDERS} folders", _originFilePaths.Count, _originFolderPaths.Count);
                 using (var scope = _serviceProvider.CreateScope())
                 {
@@ -136,12 +136,50 @@ namespace ShowPics.Cli
                     _logger.LogInformation("Iterating over database objects");
                     visited = 0;
                     lastProgressReport = DateTime.UtcNow;
-                    RemoveNonExistingFromDbRecursively(topFolders, queue, ref visited, ref lastProgressReport);
+                    RemoveNonExistingFromDbRecursively(topFolders, data, ref visited, ref lastProgressReport);
+                    data.SaveChanges();
                 }
             }
         }
 
-        public void CreateOrUpdateThumbs(ISynchronizedQueue<IJob> queue)
+        private void RemoveNonExistingFromDbRecursively(IEnumerable<Folder> folders, IFilesData data, ref int visited, ref DateTime lastProgressReport)
+        {
+            foreach (var folder in folders)
+            {
+                if (DateTime.UtcNow - lastProgressReport > new TimeSpan(0, 0, 10))
+                {
+                    _logger.LogInformation("Objects visited: {VISITED}", visited);
+                    lastProgressReport = DateTime.UtcNow;
+                }
+                visited++;
+                if (!_originFolderPaths.Contains(folder.Path))
+                {
+                    _logger.LogInformation($"Removing folder '{folder.Path}' from DB");
+                    data.Remove(folder);
+                }
+                else
+                {
+                    foreach (var file in folder.Files)
+                    {
+                        if (DateTime.UtcNow - lastProgressReport > new TimeSpan(0, 0, 10))
+                        {
+                            _logger.LogInformation("Objects visited: {VISITED}", visited);
+                            lastProgressReport = DateTime.UtcNow;
+                        }
+                        visited++;
+                        if (!_originFilePaths.Contains(file.Path))
+                        {
+                            _logger.LogInformation($"Removing file '{file.Path}' from DB");
+                            data.Remove(file);
+                        }
+                    }
+
+                    RemoveNonExistingFromDbRecursively(folder.Children, data, ref visited, ref lastProgressReport);
+                }
+            }
+        }
+
+        public void CreateOrUpdateThumbs()
         {
             _logger.LogInformation("Creating thumbnails");
             using (_logger.BeginScope("CreateOrUpdateThumbs"))
@@ -180,7 +218,10 @@ namespace ShowPics.Cli
                         if (!metadataByOriginalPath.ContainsKey(logicalPath))
                         {
                             toCreate++;
-                            queue.Enqueue(new CreateOrUpdateFile(logicalPath));
+                            using (var scope = _serviceProvider.CreateScope())
+                            {
+                                new CreateOrUpdateFile(logicalPath).Execute(scope.ServiceProvider);
+                            }
                             return false;
                         }
                         var physicalPath = _pathHelper.GetPhysicalPath(logicalPath);
@@ -189,7 +230,10 @@ namespace ShowPics.Cli
                         if (new DateTime(fileTimestamp.Year, fileTimestamp.Month, fileTimestamp.Day, fileTimestamp.Hour, fileTimestamp.Minute, fileTimestamp.Second) != metadataByOriginalPath[logicalPath].ModificationTimestamp)
                         {
                             toUpdate++;
-                            queue.Enqueue(new CreateOrUpdateFile(logicalPath));
+                            using (var scope = _serviceProvider.CreateScope())
+                            {
+                                new CreateOrUpdateFile(logicalPath).Execute(scope.ServiceProvider);
+                            }
                         }
                         return false;
                     }, false);
@@ -197,7 +241,7 @@ namespace ShowPics.Cli
             }
         }
 
-        public void CreateFolders(ISynchronizedQueue<IJob> queue)
+        public void CreateFolders()
         {
             _logger.LogInformation("Creating thumbnail folders");
             using (_logger.BeginScope("CreateFolders"))
@@ -215,14 +259,14 @@ namespace ShowPics.Cli
 
                 _logger.LogInformation("Iterating over file system objects in original folders");
                 var visited = 0;
-                var toCreate = 0;
+                var created = 0;
                 var lastProgressReport = DateTime.UtcNow;
                 ForEachFileSystemNode(_folderSettings.Value.OriginalsLogicalPrefix,
                     (logicalPath, nodeType) =>
                     {
                         if (DateTime.UtcNow - lastProgressReport > new TimeSpan(0, 0, 10))
                         {
-                            _logger.LogInformation("Objects visited: {VISITED}. To create: {toCreate}.", visited, toCreate);
+                            _logger.LogInformation("Objects visited: {VISITED}. Created: {CREATED}.", visited, created);
                             lastProgressReport = DateTime.UtcNow;
                         }
                         visited++;
@@ -230,46 +274,30 @@ namespace ShowPics.Cli
                             return false;
                         if (!metadataByOriginalPath.ContainsKey(logicalPath))
                         {
-                            toCreate++;
-                            queue.Enqueue(new CreateFolder(logicalPath));
+                            using (var scope = _serviceProvider.CreateScope())
+                            {
+                                var data = scope.ServiceProvider.GetService<IFilesData>();
+                                var physicalPath = _pathHelper.GetPhysicalPath(_pathHelper.GetThumbnailPath(logicalPath, false));
+                                _logger.LogInformation("Creating folder {name}", physicalPath);
+                                Directory.CreateDirectory(physicalPath);
+                                var parentPath = _pathHelper.GetParentPath(logicalPath);
+                                var parent = data.GetFolder(parentPath);
+                                data.Add(new Folder()
+                                {
+                                    Name = _pathHelper.GetName(logicalPath),
+                                    ParentId = parent?.Id,
+                                    Path = logicalPath
+                                });
+                                data.SaveChanges();
+                            }
+                            created++;
                         }
                         return true;
                     }, false);
             }
         }
 
-        private void RemoveNonExistingFromDbRecursively(IEnumerable<Folder> folders, ISynchronizedQueue<IJob> queue, ref int visited, ref DateTime lastProgressReport)
-        {
-            foreach (var folder in folders)
-            {
-                if (DateTime.UtcNow - lastProgressReport > new TimeSpan(0, 0, 10))
-                {
-                    _logger.LogInformation("Objects visited: {VISITED}", visited);
-                    lastProgressReport = DateTime.UtcNow;
-                }
-                visited++;
-                if (!_originFolderPaths.Contains(folder.Path))
-                {
-                    queue.Enqueue(new RemoveFolderFromDb(folder));
-                }
-                else
-                {
-                    foreach (var file in folder.Files)
-                    {
-                        if (DateTime.UtcNow - lastProgressReport > new TimeSpan(0, 0, 10))
-                        {
-                            _logger.LogInformation("Objects visited: {VISITED}", visited);
-                            lastProgressReport = DateTime.UtcNow;
-                        }
-                        visited++;
-                        if (!_originFilePaths.Contains(file.Path))
-                            queue.Enqueue(new RemoveFileFromDb(file));
-                    }
 
-                    RemoveNonExistingFromDbRecursively(folder.Children, queue, ref visited, ref lastProgressReport);
-                }
-            }
-        }
 
         private void ForEachFileSystemNode(string logicalPath, Func<string, NodeType, bool> action, bool includingRoot = true)
         {
@@ -321,7 +349,13 @@ namespace ShowPics.Cli
             File,
             Folder
         }
+
+        public void Run()
+        {
+            RemoveNonExistingFromDb();
+            RemoveNonExistingFromDisk();
+            CreateFolders();
+            CreateOrUpdateThumbs();
+        }
     }
-
-
 }

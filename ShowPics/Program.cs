@@ -18,6 +18,8 @@ namespace ShowPics
 {
     public class Program
     {
+        private static IRuntimeEnvironment _environment = new RuntimeEnvironment(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production");
+
         public static void Main(string[] args)
         {
             if (Environment.GetEnvironmentVariable("RUNS_IN_IIS_EXPRESS") == "true" && args.Length == 0)
@@ -28,22 +30,26 @@ namespace ShowPics
             ConfigureCommands(app);
             app.OnExecute(() => app.ShowHelp());
             app.Execute(args);
+
+            if (_environment.Name == "Development")
+            {
+                Console.WriteLine("Press any key to close.");
+                Console.ReadKey();
+            }
         }
 
         public static IServiceCollection BuildServiceCollection()
         {
-            var environment = new RuntimeEnvironment(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production");
-
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true)
-                .AddJsonFile($"appsettings.{environment.Name}.json", optional: true)
+                .AddJsonFile($"appsettings.{_environment.Name}.json", optional: true)
                 .Build();
 
             var serviceCollection = new ServiceCollection();
 
             serviceCollection.AddSingleton<IConfiguration>(config);
-            serviceCollection.AddSingleton<IRuntimeEnvironment>(environment);
+            serviceCollection.AddSingleton<IRuntimeEnvironment>(_environment);
 
             var commonConfiguration = new CommonServiceConfiguration();
             serviceCollection.AddSingleton<ICommonServiceConfiguration>(commonConfiguration);
