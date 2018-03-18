@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ShowPics.Cli.Jobs;
 using ShowPics.Data.Abstractions;
 using ShowPics.Entities;
 using ShowPics.Utilities;
@@ -11,6 +10,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ShowPics.Cli
 {
@@ -20,21 +21,11 @@ namespace ShowPics.Cli
         private IOptions<FolderSettings> _folderSettings;
         private readonly PathHelper _pathHelper;
         private IServiceProvider _serviceProvider;
-        private HashSet<string> _originFilePaths = new HashSet<string>();
-        private HashSet<string> _originFolderPaths = new HashSet<string>();
-        private HashSet<string> _thumbnailFilePaths = new HashSet<string>();
-        private HashSet<string> _thumbnailFolderPaths = new HashSet<string>();
-        private HashSet<string> _metadataFolderPaths = new HashSet<string>();
-        private HashSet<string> _metadataFilePaths = new HashSet<string>();
-
-
 
         private string[] _filesToKeep =
             {
                 "data.db"
             };
-
-
 
         public ConversionRunner(ILogger<ConversionRunner> logger, IOptions<FolderSettings> folderSettings, PathHelper pathHelper, IServiceProvider serviceProvider)
         {
@@ -46,6 +37,9 @@ namespace ShowPics.Cli
 
         public void RemoveNonExistingFromDisk()
         {
+            var metadataFolderPaths = new HashSet<string>();
+            var metadataFilePaths = new HashSet<string>();
+
             _logger.LogInformation("Cleaning thumbnails directory");
             using (_logger.BeginScope("CleanThumbnails"))
             {
@@ -57,11 +51,11 @@ namespace ShowPics.Cli
                     _logger.LogInformation("Building db objects lookup table");
                     foreach (var folder in allObjects)
                     {
-                        _metadataFolderPaths.Add(_pathHelper.GetThumbnailPath(folder.Path, false));
+                        metadataFolderPaths.Add(_pathHelper.GetThumbnailPath(folder.Path, false));
                         foreach (var file in folder.Files)
-                            _metadataFilePaths.Add(file.ThumbnailPath);
+                            metadataFilePaths.Add(file.ThumbnailPath);
                     }
-                    _logger.LogInformation("Found {FOLDERS} folders and {FILES} files in db", _metadataFolderPaths.Count, _metadataFilePaths.Count);
+                    _logger.LogInformation("Found {FOLDERS} folders and {FILES} files in db", metadataFolderPaths.Count, metadataFilePaths.Count);
                 }
 
                 _logger.LogInformation("Iterating over file system objects in thumbnails folder");
@@ -69,8 +63,7 @@ namespace ShowPics.Cli
                 var filesRemoved = 0;
                 var foldersRemoved = 0;
                 var lastProgressReport = DateTime.UtcNow;
-                ForEachFileSystemNode(_folderSettings.Value.ThumbnailsLogicalPrefix,
-                (logicalPath, nodeType) =>
+                foreach(var item in GetFileSystemNodeEnumerable(_folderSettings.Value.ThumbnailsLogicalPrefix, includingRoot: false))
                 {
                     if (DateTime.UtcNow - lastProgressReport > new TimeSpan(0, 0, 10))
                     {
@@ -79,70 +72,76 @@ namespace ShowPics.Cli
                     }
 
                     visited++;
-                    if (nodeType == NodeType.File && !_metadataFilePaths.Contains(logicalPath))
+                    if (item.NodeType == NodeType.File && !metadataFilePaths.Contains(item.LogicalPath))
                     {
-                        var physicalPath = _pathHelper.GetPhysicalPath(logicalPath);
-                        if (_filesToKeep.Contains(Path.GetFileName(physicalPath)))
-                            return false;
-                        _logger.LogInformation("Removing file '{FILE}' from disk.", physicalPath);
-                        System.IO.File.Delete(physicalPath);
-                        filesRemoved++;
-                        return false;
+                        var physicalPath = _pathHelper.GetPhysicalPath(item.LogicalPath);
+                        if (!_filesToKeep.Contains(Path.GetFileName(physicalPath)))
+                        {
+                            _logger.LogInformation("Removing file '{FILE}' from disk.", physicalPath);
+                            System.IO.File.Delete(physicalPath);
+                            filesRemoved++;
+                        }
                     }
-                    else if (nodeType == NodeType.Folder && !_metadataFolderPaths.Contains(logicalPath))
+                    else if (item.NodeType == NodeType.Folder && !metadataFolderPaths.Contains(item.LogicalPath))
                     {
-                        var physicalPath = _pathHelper.GetPhysicalPath(logicalPath);
+                        var physicalPath = _pathHelper.GetPhysicalPath(item.LogicalPath);
                         _logger.LogInformation("Removing folder '{FOLDER}' from disk.", physicalPath);
                         Directory.Delete(physicalPath, recursive: true);
                         foldersRemoved++;
-                        return false;
+                        item.EnumerateContents = false;
                     }
-                    return true;
-                }, false);
+                }
                 _logger.LogInformation("Visited {TOTAL} objects, folders removed: {FOLDERS}, files removed: {FILES}.", visited, foldersRemoved, filesRemoved);
             }
 
         }
 
+        private (HashSet<string> folderPaths, HashSet<string> filePaths) ScanOriginFolders()
+        {
+            var originFilePaths = new HashSet<string>();
+            var originFolderPaths = new HashSet<string>();
+
+            _logger.LogInformation("Iterating over file system objects in original folders");
+            var visited = 0;
+            var lastProgressReport = DateTime.UtcNow;
+            foreach (var item in GetFileSystemNodeEnumerable(_folderSettings.Value.OriginalsLogicalPrefix, includingRoot: false))
+            {
+                if (DateTime.UtcNow - lastProgressReport > new TimeSpan(0, 0, 10))
+                {
+                    _logger.LogInformation("Objects visited: {VISITED}", visited);
+                    lastProgressReport = DateTime.UtcNow;
+                }
+                visited++;
+                if (item.NodeType == NodeType.File)
+                    originFilePaths.Add(item.LogicalPath);
+                else
+                    originFolderPaths.Add(item.LogicalPath);
+            }
+            _logger.LogInformation("Found {FILES} files and {FOLDERS} folders", originFilePaths.Count, originFolderPaths.Count);
+            return (originFolderPaths, originFilePaths);
+        }
+
         public void RemoveNonExistingFromDb()
         {
+            var (originFolderPaths, originFilePaths) = ScanOriginFolders();
             _logger.LogInformation("Cleaning database");
             using (_logger.BeginScope("CleanDb"))
             {
-                _logger.LogInformation("Iterating over file system objects in original folders");
-                var visited = 0;
-                var lastProgressReport = DateTime.UtcNow;
-                ForEachFileSystemNode(_folderSettings.Value.OriginalsLogicalPrefix,
-                    (logicalPath, nodeType) =>
-                    {
-                        if (DateTime.UtcNow - lastProgressReport > new TimeSpan(0, 0, 10))
-                        {
-                            _logger.LogInformation("Objects visited: {VISITED}", visited);
-                            lastProgressReport = DateTime.UtcNow;
-                        }
-                        visited++;
-                        if (nodeType == NodeType.File)
-                            _originFilePaths.Add(logicalPath);
-                        else
-                            _originFolderPaths.Add(logicalPath);
-                        return true;
-                    }, includingRoot: false);
-                _logger.LogInformation("Found {FILES} files and {FOLDERS} folders", _originFilePaths.Count, _originFolderPaths.Count);
                 using (var scope = _serviceProvider.CreateScope())
                 {
                     var data = scope.ServiceProvider.GetService<IFilesData>();
                     _logger.LogInformation("Loading database");
                     var topFolders = data.GetAll().Where(x => x.ParentId == null).ToList();
                     _logger.LogInformation("Iterating over database objects");
-                    visited = 0;
-                    lastProgressReport = DateTime.UtcNow;
-                    RemoveNonExistingFromDbRecursively(topFolders, data, ref visited, ref lastProgressReport);
+                    var visited = 0;
+                    var lastProgressReport = DateTime.UtcNow;
+                    RemoveNonExistingFromDbRecursively(topFolders, data, originFolderPaths, originFilePaths, ref visited, ref lastProgressReport);
                     data.SaveChanges();
                 }
             }
         }
 
-        private void RemoveNonExistingFromDbRecursively(IEnumerable<Folder> folders, IFilesData data, ref int visited, ref DateTime lastProgressReport)
+        private void RemoveNonExistingFromDbRecursively(IEnumerable<Folder> folders, IFilesData data, HashSet<string> originFolderPaths, HashSet<string> originFilePaths, ref int visited, ref DateTime lastProgressReport)
         {
             foreach (var folder in folders)
             {
@@ -152,7 +151,7 @@ namespace ShowPics.Cli
                     lastProgressReport = DateTime.UtcNow;
                 }
                 visited++;
-                if (!_originFolderPaths.Contains(folder.Path))
+                if (!originFolderPaths.Contains(folder.Path))
                 {
                     _logger.LogInformation($"Removing folder '{folder.Path}' from DB");
                     data.Remove(folder);
@@ -167,77 +166,102 @@ namespace ShowPics.Cli
                             lastProgressReport = DateTime.UtcNow;
                         }
                         visited++;
-                        if (!_originFilePaths.Contains(file.Path))
+                        if (!originFilePaths.Contains(file.Path))
                         {
                             _logger.LogInformation($"Removing file '{file.Path}' from DB");
                             data.Remove(file);
                         }
                     }
 
-                    RemoveNonExistingFromDbRecursively(folder.Children, data, ref visited, ref lastProgressReport);
+                    RemoveNonExistingFromDbRecursively(folder.Children, data, originFolderPaths, originFilePaths, ref visited, ref lastProgressReport);
                 }
             }
         }
 
-        public void CreateOrUpdateThumbs()
+        private bool IsFormatSupported(string logicalPath)
         {
-            _logger.LogInformation("Creating thumbnails");
-            using (_logger.BeginScope("CreateOrUpdateThumbs"))
+            using (var scope = _serviceProvider.CreateScope())
             {
-                var metadataByOriginalPath = new Dictionary<string, Entities.File>();
-                using (var scope = _serviceProvider.CreateScope())
+                var creatorFactory = scope.ServiceProvider.GetService<Func<string, IThumbnailCreator>>();
+                var thumbnailCreator = creatorFactory(logicalPath);
+                return thumbnailCreator.IsFormatSupported();
+            }
+        }
+        
+
+        public IEnumerable<string> GetFilesToCreateOrUpdateEnumerable()
+        {
+            _logger.LogInformation("Enumerating files to create or update");
+            var metadataByOriginalPath = new Dictionary<string, Entities.File>();
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var data = scope.ServiceProvider.GetService<IFilesData>();
+                _logger.LogInformation("Loading database");
+                foreach (var folder in data.GetAll())
                 {
-                    var data = scope.ServiceProvider.GetService<IFilesData>();
-                    _logger.LogInformation("Loading database");
-                    foreach (var folder in data.GetAll())
-                    {
-                        foreach (var file in folder.Files)
-                            metadataByOriginalPath.Add(file.Path, file);
-                    }
+                    foreach (var file in folder.Files)
+                        metadataByOriginalPath.Add(file.Path, file);
                 }
+            }
 
-                _logger.LogInformation("Iterating over file system objects in original folders");
-                var visited = 0;
-                var toCreate = 0;
-                var toUpdate = 0;
-                var lastProgressReport = DateTime.UtcNow;
+            _logger.LogInformation("Iterating over file system objects in original folders");
+            var visited = 0;
+            var toCreate = 0;
+            var toUpdate = 0;
+            var lastProgressReport = DateTime.UtcNow;
 
-                ForEachFileSystemNode(_folderSettings.Value.OriginalsLogicalPrefix,
-                    (logicalPath, nodeType) =>
+            foreach (var item in GetFileSystemNodeEnumerable(_folderSettings.Value.OriginalsLogicalPrefix, includingRoot: false))
+            {
+                if (DateTime.UtcNow - lastProgressReport > new TimeSpan(0, 0, 10))
+                {
+                    _logger.LogInformation("Objects visited: {VISITED}. To create: {toCreate}, to update: {toUpdate}.", visited, toCreate, toUpdate);
+                    lastProgressReport = DateTime.UtcNow;
+                }
+                visited++;
+
+                if (item.NodeType != NodeType.Folder && IsFormatSupported(item.LogicalPath))
+                {
+                    if (!metadataByOriginalPath.ContainsKey(item.LogicalPath))
                     {
-                        if (DateTime.UtcNow - lastProgressReport > new TimeSpan(0, 0, 10))
-                        {
-                            _logger.LogInformation("Objects visited: {VISITED}. To create: {toCreate}, to update: {toUpdate}.", visited, toCreate, toUpdate);
-                            lastProgressReport = DateTime.UtcNow;
-                        }
-                        visited++;
-                        if (nodeType == NodeType.Folder)
-                            return true;
-                        if (!CreateOrUpdateFile.IsFormatSupported(logicalPath))
-                            return false;
-                        if (!metadataByOriginalPath.ContainsKey(logicalPath))
-                        {
-                            toCreate++;
-                            using (var scope = _serviceProvider.CreateScope())
-                            {
-                                new CreateOrUpdateFile(logicalPath).Execute(scope.ServiceProvider);
-                            }
-                            return false;
-                        }
-                        var physicalPath = _pathHelper.GetPhysicalPath(logicalPath);
+                        toCreate++;
+                        yield return item.LogicalPath;
+                    }
+                    else
+                    {
+                        var physicalPath = _pathHelper.GetPhysicalPath(item.LogicalPath);
                         var fileTimestamp = System.IO.File.GetLastWriteTime(physicalPath);
                         // Drop any precision beyond seconds
-                        if (new DateTime(fileTimestamp.Year, fileTimestamp.Month, fileTimestamp.Day, fileTimestamp.Hour, fileTimestamp.Minute, fileTimestamp.Second) != metadataByOriginalPath[logicalPath].ModificationTimestamp)
+                        if (new DateTime(fileTimestamp.Year, fileTimestamp.Month, fileTimestamp.Day, fileTimestamp.Hour, fileTimestamp.Minute, fileTimestamp.Second) != metadataByOriginalPath[item.LogicalPath].ModificationTimestamp)
                         {
                             toUpdate++;
+                            yield return item.LogicalPath;
+                        }
+                    }
+                }
+            }
+            _logger.LogInformation("Finished iterating over file system objects in original folders. Visited {visited}, to create {toCreate}, to update {toUpdate}, ", visited, toCreate, toUpdate);
+        }
+
+        public void CreateOrUpdateThumbs()
+        {
+            _logger.LogInformation("Creating/updating thumbnails and metadata");
+            using (_logger.BeginScope("CreateOrUpdateThumbs"))
+            {
+                Parallel.ForEach(GetFilesToCreateOrUpdateEnumerable(), new ParallelOptions() { MaxDegreeOfParallelism = _folderSettings.Value.ConvertionThreads }
+                    , logicalPath =>
+                    {
+                        using (_logger.BeginScope("Thread {ID}", Thread.CurrentThread.ManagedThreadId))
+                        {
+                            _logger.LogInformation("Creating or updating file '{LOGICAL_PATH}'", logicalPath);
                             using (var scope = _serviceProvider.CreateScope())
                             {
-                                new CreateOrUpdateFile(logicalPath).Execute(scope.ServiceProvider);
+                                var creatorFactory = scope.ServiceProvider.GetService<Func<string, IThumbnailCreator>>();
+                                var thumbnailCreator = creatorFactory(logicalPath);
+                                thumbnailCreator.CreateOrUpdateThumbnail();
                             }
+                            _logger.LogInformation("Creating or updating file '{LOGICAL_PATH}' complete!", logicalPath);
                         }
-                        return false;
-                    }, false);
-                _logger.LogInformation("Finished iterating over file system objects in original folders. Visited {visited}, to create {toCreate}, to update {toUpdate}, ", visited, toCreate, toUpdate);
+                    });
             }
         }
 
@@ -261,58 +285,65 @@ namespace ShowPics.Cli
                 var visited = 0;
                 var created = 0;
                 var lastProgressReport = DateTime.UtcNow;
-                ForEachFileSystemNode(_folderSettings.Value.OriginalsLogicalPrefix,
-                    (logicalPath, nodeType) =>
+                foreach (var item in GetFileSystemNodeEnumerable(_folderSettings.Value.OriginalsLogicalPrefix, includingRoot: false))
+                {
+                    if (DateTime.UtcNow - lastProgressReport > new TimeSpan(0, 0, 10))
                     {
-                        if (DateTime.UtcNow - lastProgressReport > new TimeSpan(0, 0, 10))
+                        _logger.LogInformation("Objects visited: {VISITED}. Created: {CREATED}.", visited, created);
+                        lastProgressReport = DateTime.UtcNow;
+                    }
+                    visited++;
+                    if (item.NodeType == NodeType.Folder && !metadataByOriginalPath.ContainsKey(item.LogicalPath))
+                    {
+                        using (var scope = _serviceProvider.CreateScope())
                         {
-                            _logger.LogInformation("Objects visited: {VISITED}. Created: {CREATED}.", visited, created);
-                            lastProgressReport = DateTime.UtcNow;
-                        }
-                        visited++;
-                        if (nodeType == NodeType.File)
-                            return false;
-                        if (!metadataByOriginalPath.ContainsKey(logicalPath))
-                        {
-                            using (var scope = _serviceProvider.CreateScope())
+                            var data = scope.ServiceProvider.GetService<IFilesData>();
+                            var physicalPath = _pathHelper.GetPhysicalPath(_pathHelper.GetThumbnailPath(item.LogicalPath, false));
+                            _logger.LogInformation("Creating folder {name}", physicalPath);
+                            Directory.CreateDirectory(physicalPath);
+                            var parentPath = _pathHelper.GetParentPath(item.LogicalPath);
+                            var parent = data.GetFolder(parentPath);
+                            data.Add(new Folder()
                             {
-                                var data = scope.ServiceProvider.GetService<IFilesData>();
-                                var physicalPath = _pathHelper.GetPhysicalPath(_pathHelper.GetThumbnailPath(logicalPath, false));
-                                _logger.LogInformation("Creating folder {name}", physicalPath);
-                                Directory.CreateDirectory(physicalPath);
-                                var parentPath = _pathHelper.GetParentPath(logicalPath);
-                                var parent = data.GetFolder(parentPath);
-                                data.Add(new Folder()
-                                {
-                                    Name = _pathHelper.GetName(logicalPath),
-                                    ParentId = parent?.Id,
-                                    Path = logicalPath
-                                });
-                                data.SaveChanges();
-                            }
-                            created++;
+                                Name = _pathHelper.GetName(item.LogicalPath),
+                                ParentId = parent?.Id,
+                                Path = item.LogicalPath
+                            });
+                            data.SaveChanges();
                         }
-                        return true;
-                    }, false);
+                        created++;
+                    }
+                }
             }
         }
 
-
-
-        private void ForEachFileSystemNode(string logicalPath, Func<string, NodeType, bool> action, bool includingRoot = true)
+        /// <summary>
+        /// Gets an IEnumerable that can be used to enumerate logical file system nodes
+        ///     <para>
+        ///     If the returned IEnumerable is used in a foreach loop, then it's possible to skip enumerating folder contents by setting EnumerateContents to false on the folder node.
+        ///     </para>
+        /// </summary>
+        /// <param name="logicalPath">Logical folder path to enumerate</param>
+        /// <param name="includingRoot">Whether to include the enumeration root node in the results</param>
+        /// <returns>IEnumerable of file system nodes</returns>
+        private IEnumerable<FileSystemNodeEnumerationItem> GetFileSystemNodeEnumerable(string logicalPath, bool includingRoot = true)
         {
             var children = GetChildren(logicalPath);
             if (children != null)
             {
-                if (!includingRoot || action(logicalPath, NodeType.Folder))
+                var enumerationItem = new FileSystemNodeEnumerationItem() { LogicalPath = logicalPath, NodeType = NodeType.Folder };
+                if (includingRoot)
+                    yield return enumerationItem;
+                if (enumerationItem.EnumerateContents)
                     foreach (var child in children)
                     {
-                        ForEachFileSystemNode(_pathHelper.JoinLogicalPaths(logicalPath, child), action);
+                        foreach (var item in GetFileSystemNodeEnumerable(_pathHelper.JoinLogicalPaths(logicalPath, child)))
+                            yield return item;
                     }
             }
             else
             {
-                action(logicalPath, NodeType.File);
+                yield return new FileSystemNodeEnumerationItem() { LogicalPath = logicalPath, NodeType = NodeType.File };
             }
         }
 
@@ -344,18 +375,25 @@ namespace ShowPics.Cli
                 return null;
         }
 
-        private enum NodeType
-        {
-            File,
-            Folder
-        }
-
         public void Run()
         {
             RemoveNonExistingFromDb();
             RemoveNonExistingFromDisk();
             CreateFolders();
             CreateOrUpdateThumbs();
+        }
+
+        private class FileSystemNodeEnumerationItem
+        {
+            public string LogicalPath { get; set; }
+            public NodeType NodeType { get; set; }
+            public bool EnumerateContents { get; set; } = true;
+        }
+
+        private enum NodeType
+        {
+            File,
+            Folder
         }
     }
 }

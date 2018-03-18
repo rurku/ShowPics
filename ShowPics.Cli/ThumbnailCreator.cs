@@ -11,15 +11,23 @@ using System.Text.RegularExpressions;
 using SixLabors.ImageSharp.MetaData;
 using System.Globalization;
 
-namespace ShowPics.Cli.Jobs
+namespace ShowPics.Cli
 {
-    public class CreateOrUpdateFile : IJob
+    public interface IThumbnailCreator
     {
-        public CreateOrUpdateFile(string logicalPath)
+        bool IsFormatSupported();
+        void CreateOrUpdateThumbnail();
+    }
+
+
+    public class ThumbnailCreator : IThumbnailCreator
+    {
+        public ThumbnailCreator(string logicalPath, IFilesData filesData, PathHelper pathHelper)
         {
             LogicalPath = logicalPath;
+            _filesData = filesData;
+            _pathHelper = pathHelper;
         }
-        public string Description => $"Create or update file '{LogicalPath}'";
 
         private static readonly string[] _imageFileTypes =
         {
@@ -29,23 +37,24 @@ namespace ShowPics.Cli.Jobs
             ".bmp$"
         };
 
-        public static bool IsFormatSupported(string logicalPath) 
-            => _imageFileTypes.Any(x => Regex.IsMatch(logicalPath, x, RegexOptions.IgnoreCase));
+        private readonly IFilesData _filesData;
+        private readonly PathHelper _pathHelper;
+
+        public bool IsFormatSupported() 
+            => _imageFileTypes.Any(x => Regex.IsMatch(LogicalPath, x, RegexOptions.IgnoreCase));
 
         public string LogicalPath { get; }
 
-        public void Execute(IServiceProvider serviceProvider)
+        public void CreateOrUpdateThumbnail()
         {
-            var pathHelper = serviceProvider.GetService<PathHelper>();
-            var originalPhysicalPath = pathHelper.GetPhysicalPath(LogicalPath);
-            var thumbnailPath = pathHelper.GetThumbnailPath(LogicalPath, true);
-            var thumbnailPhysicalPath = pathHelper.GetPhysicalPath(thumbnailPath);
+            var originalPhysicalPath = _pathHelper.GetPhysicalPath(LogicalPath);
+            var thumbnailPath = _pathHelper.GetThumbnailPath(LogicalPath, true);
+            var thumbnailPhysicalPath = _pathHelper.GetPhysicalPath(thumbnailPath);
 
-            var data = serviceProvider.GetService<IFilesData>();
-            var file = data.GetFile(LogicalPath) ?? new Entities.File();
+            var file = _filesData.GetFile(LogicalPath) ?? new Entities.File();
             var fileTimestamp = File.GetLastWriteTime(originalPhysicalPath);
             file.ModificationTimestamp = new DateTime(fileTimestamp.Year, fileTimestamp.Month, fileTimestamp.Day, fileTimestamp.Hour, fileTimestamp.Minute, fileTimestamp.Second);
-            file.Name = pathHelper.GetName(LogicalPath);
+            file.Name = _pathHelper.GetName(LogicalPath);
             file.Path = LogicalPath;
             file.ThumbnailPath = thumbnailPath;
 
@@ -62,10 +71,10 @@ namespace ShowPics.Cli.Jobs
 
             if (file.Id == 0)
             {
-                file.FolderId = data.GetFolder(pathHelper.GetParentPath(LogicalPath)).Id;
-                data.Add(file);
+                file.FolderId = _filesData.GetFolder(_pathHelper.GetParentPath(LogicalPath)).Id;
+                _filesData.Add(file);
             }
-            data.SaveChanges();
+            _filesData.SaveChanges();
         }
 
         private DateTime? GetOriginalCreationDate(ImageMetaData metaData)
