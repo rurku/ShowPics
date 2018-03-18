@@ -6,7 +6,6 @@ import { TreeComponent } from './tree/tree.component';
 import { ThumbnailsComponent } from './thumbnails/thumbnails.component';
 import { MediaBrowserComponent } from './media-browser.component';
 import { RouterModule } from '@angular/router';
-import { PreviewComponent } from './preview/preview.component';
 
 @NgModule({
   imports: [
@@ -16,7 +15,7 @@ import { PreviewComponent } from './preview/preview.component';
     ]),
     TreeModule
   ],
-  declarations: [TreeComponent, ThumbnailsComponent, MediaBrowserComponent, PreviewComponent],
+  declarations: [TreeComponent, ThumbnailsComponent, MediaBrowserComponent],
   exports: []
 })
 export class MediaBrowserModule { }

@@ -13,9 +13,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShowPics.Data", "ShowPics.D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShowPics.Entities", "ShowPics.Entities\ShowPics.Entities.csproj", "{372CFEE2-DB8E-4A8B-89A1-E850D96D299A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShowPics.Data.Abstractions", "ShowPics.Data.Abstractions\ShowPics.Data.Abstractions.csproj", "{25A5262D-0DEB-4E8A-BA2A-154856DE39E3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShowPics.Data.Abstractions", "ShowPics.Data.Abstractions\ShowPics.Data.Abstractions.csproj", "{25A5262D-0DEB-4E8A-BA2A-154856DE39E3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShowPics.Utilities", "ShowPics.Utilities\ShowPics.Utilities.csproj", "{63EC4D51-CACE-4E50-919F-1825ECF06B8C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{68E2C078-93D8-4E1F-B638-7BD79542B5CF}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

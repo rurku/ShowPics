@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace ShowPics
 {
+    /// <summary>
+    /// Class used by Entity Framework commands in Package Manager Console
+    /// </summary>
     public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<ShowPicsDbContext>
     {
         public ShowPicsDbContext CreateDbContext(string[] args)

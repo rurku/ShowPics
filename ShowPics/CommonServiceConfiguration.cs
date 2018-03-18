@@ -18,6 +18,9 @@ using Serilog.Events;
 
 namespace ShowPics
 {
+    /// <summary>
+    /// Service configuration that's used in web server context as well as in command line interface
+    /// </summary>
     public class CommonServiceConfiguration : ICommonServiceConfiguration
     {
         public void ConfigureServices(IServiceCollection services)
