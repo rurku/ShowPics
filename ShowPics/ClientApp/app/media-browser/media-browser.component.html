@@ -5,7 +5,6 @@
     <div class='col-sm-9 body-content'>
         <div *ngIf="selectedFileSystemObject; else nothingSelected">
             <app-thumbnails *ngIf="selectedFileSystemObject.type==fileSystemObjectTypes.DIRECTORY" [fileSystemObject]="selectedFileSystemObject"></app-thumbnails>
-            <app-preview *ngIf="selectedFileSystemObject.type==fileSystemObjectTypes.FILE" [fileSystemObject]="selectedFileSystemObject"></app-preview>
         </div>
         <ng-template #nothingSelected>
             Select something in the tree
