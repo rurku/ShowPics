@@ -6,7 +6,7 @@ script:
   - dotnet publish --configuration Release
 before_deploy:
   - mkdir release
-  - tar -czf ShowPics/bin/Release/netcoreapp2.0/publish release/showpics-build-$TRAVIS_BUILD_NUMBER.tar.gz
+  - tar -czf release/showpics-build-$TRAVIS_BUILD_NUMBER.tar.gz -C ShowPics/bin/Release/netcoreapp2.0/publish .
 deploy:
   provider: releases
   api_key: "GITHUB OAUTH TOKEN"
