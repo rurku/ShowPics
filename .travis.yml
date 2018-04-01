@@ -3,6 +3,7 @@ solution: ShowPics.sln
 mono: none
 dotnet: 2.1.101
 script:
+  - npm install --prefix ShowPics
   - dotnet build
 before_deploy:
   - dotnet publish ShowPics/ShowPics.csproj --configuration Release
