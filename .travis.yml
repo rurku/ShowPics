@@ -21,7 +21,7 @@ before_deploy:
   - dotnet publish ShowPics/ShowPics.csproj --configuration Release --runtime linux-arm
   - mkdir release
   - tar -czf release/showpics_${TRAVIS_TAG}_fdd_any.tar.gz -C ShowPics/bin/Release/netcoreapp2.0/publish .
-  - tar -czf release/showpics_${TRAVIS_TAG}_scd_linux-arm.tar.gz -C ShowPics/bin/Release/netcoreapp2.0/publish .
+  - tar -czf release/showpics_${TRAVIS_TAG}_scd_linux-arm.tar.gz -C ShowPics/bin/Release/netcoreapp2.0/linux-arm/publish .
 deploy:
   provider: releases
   api_key: ${GITHUB_RELEASE_TOKEN}
