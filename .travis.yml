@@ -2,15 +2,17 @@ language: csharp
 solution: ShowPics.sln
 mono: none
 dotnet: 2.1.101
-script: 
-  - dotnet publish --configuration Release
+script:
+- dotnet publish --configuration Release
 before_deploy:
   - mkdir release
   - tar -czf release/showpics-build-$TRAVIS_BUILD_NUMBER.tar.gz -C ShowPics/bin/Release/netcoreapp2.0/publish .
 deploy:
   provider: releases
-  api_key: "GITHUB OAUTH TOKEN"
+  api_key: 
+    secure: "rLfR5IL2DeTkkFTpOEcQJhgpKc3GlkUifu0oARpzeGe+gULe15740Bz2rSkZ2tnT+nBVlbhdwZaMUZr2atqoHs/6SHtFvOhsPWK6JZso55VlsEXuYHm92cDONVkvexcvT96tCi1+fRC9akD5sMo+42+n0E3CBbEAMIsdOZVFkcFlqMh3nyZmzEzikZENHh4B6/GDEfwEUkY+Au6zSiy2979v4ijKFLtbU/kig3F9M2wzPwd8xMQMLLNHI0gKX0EWsTPmpw49FAX3DHOk8UuKHsQe4Pj7DbnyxPw3wzbea6+pijz6UcvF0YwwrBr1DjaZ3LgpNMXJSJwFGZGQL3WXHEes5cbhyRu6ndBs7wLRZUmudU/z2RvtVHZ9Fmcn1EDKYQHRQx7xT+8Qc5wJgfxaUfRgvaKplAPTgCCCP8oUc/Fojfd+GOhzwg8DVFjjwjtmkjuieszxWcspdU9TFUCy0ywTtaz0y5lVfBd4iy1ypv6ttke9TKpAfEPROmBtLsRcsRkA2Ftjyqup4B53OnC8rie6ksjZ8O0EVdSDHLTX0yyfn6Bxv94Zu/PJxZ0qKwNeCCe5/P8LMO352TvZGaodlzxeTQxbaD0oU3LByFeLpBfG7nHd47P9yb48GqWLp3CjyLbujgOFKeqoRa8laQ7/9t12pd3FU+ARDBWYyHrgZJQ="
   file: "release/*"
   skip_cleanup: true
+  draft: true #for testing purposes
   on:
     branch: add_travis_ci
