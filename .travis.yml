@@ -1,0 +1,6 @@
+language: csharp
+solution: ShowPics.sln
+mono: none
+dotnet: 2.1.101
+script: 
+  - dotnet publish --configuration Release
