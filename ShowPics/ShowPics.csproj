@@ -9,7 +9,7 @@
   
   <PropertyGroup>
     <!-- Don't use runtime store and include all dependencies when publishing -->
-    <PublishWithAspNetCoreTargetManifest>false</PublishWithAspNetCoreTargetManifest>
+    <!--<PublishWithAspNetCoreTargetManifest>false</PublishWithAspNetCoreTargetManifest>-->
   </PropertyGroup>
 
   <ItemGroup>

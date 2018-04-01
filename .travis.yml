@@ -4,3 +4,13 @@ mono: none
 dotnet: 2.1.101
 script: 
   - dotnet publish --configuration Release
+before_deploy:
+  - mkdir release
+  - tar -czf ShowPics/bin/Release/netcoreapp2.0/publish release/showpics-build-$TRAVIS_BUILD_NUMBER.tar.gz
+deploy:
+  provider: releases
+  api_key: "GITHUB OAUTH TOKEN"
+  file: "release/*"
+  skip_cleanup: true
+  on:
+    tags: false
