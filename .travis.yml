@@ -1,0 +1,39 @@
+language: csharp
+solution: ShowPics.sln
+mono: none
+dotnet: 2.1.101
+os: linux
+dist: trusty
+env:
+  - secure: "T4NlnO74f3R3XKeAAtHyQQK2D1SJ/4G0b2P2dO8rtIxeeDLDLFhmPwjEsKIQX3T37hjzfpt3KGtsUVyMX+JV0XUghaDlCIefnhTCxaKKcDINhgG7R6n24b0ogUiCuObLpeMI9TD/2BM1zvx+/qojuXEoMydzJiRNsPbfBnke1tvvpfRyDr39w8k6uL72pzKevTHEB0D7WZ71ua5t7B+h0rB2D4X+LZ9ddj53Pf/0LQbbWYA9zk45vKgzUGFKbjys9FP6dJBLf7WKU+xfqZ8b4osDdHoBGnen8f4/HWqi0ObEBfKApKPlJfX5QIP4SqegcSsNC7CZSFPdZdfXTsPoYWRqyRbqlxeHvwRgQ3Np3guV4hLXTdSrke7lr/NyXw1Lqjs1hseRq+9PkoKEAJWf6oAECv466RfQ5Iz87H0un4uz+sGTUtezLr1lK+/ekoq0li290egjBjv+GZkfzNvsXI25wqDY+xAjwv7A0SCEE1qKcU3B2/XG59hmZYx9/kGSSi5Qq0IRJjPo+TtqR3JPetziQWb4FWQptEeNT7Pig3sujkEkmmq9Xbu092hVFIzy09fBHqqGh8JYfXOLkQmd3FLZIIzRdoeVedQEGoegh1LFtgRppqiHwtnb57eUxWYhEMjkrsbYTNCLhBn4tbYX+K0suXijoduKxOJ2B+AnxmM="
+addons:
+  apt:
+    sources:
+      - sourceline: "deb [arch=amd64] https://packages.microsoft.com/ubuntu/14.04/prod trusty main"
+        key_url: "https://packages.microsoft.com/keys/microsoft.asc"
+    packages:
+      - powershell
+script:
+  - npm install --prefix ShowPics
+  - dotnet build
+before_deploy:
+  - dotnet publish ShowPics/ShowPics.csproj --configuration Release
+  - dotnet publish ShowPics/ShowPics.csproj --configuration Release --runtime linux-arm
+  - mkdir release
+  - chmod a+x ShowPics/bin/Release/netcoreapp2.0/linux-arm/publish/ShowPics
+  - tar -czf release/showpics_${TRAVIS_TAG}_fdd_any.tar.gz -C ShowPics/bin/Release/netcoreapp2.0/publish .
+  - tar -czf release/showpics_${TRAVIS_TAG}_scd_linux-arm.tar.gz -C ShowPics/bin/Release/netcoreapp2.0/linux-arm/publish .
+deploy:
+  provider: releases
+  api_key: ${GITHUB_RELEASE_TOKEN}
+  file: 
+    - release/showpics_${TRAVIS_TAG}_fdd_any.tar.gz
+    - release/showpics_${TRAVIS_TAG}_scd_linux-arm.tar.gz
+  skip_cleanup: true
+  prerelease: true
+  on:
+    all_branches: true
+    tags: true
+
+after_deploy:
+  - pwsh -f tools/after_deploy.ps1

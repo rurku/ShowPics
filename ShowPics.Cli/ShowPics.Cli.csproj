@@ -5,7 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-ci0161" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0003" />
+    <!-- Had to add System.Numerics.Vectors explicitly to fix compilation errors with ImageSharp 1.0.0-beta0003. Might not be needed with future versions. -->
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0-preview1-26216-02" />
   </ItemGroup>
 
   <ItemGroup>
