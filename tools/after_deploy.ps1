@@ -5,7 +5,7 @@ if ($env:TRAVIS_TAG -NotLike '*-*')
   "Getting release ID for tag $($env:TRAVIS_TAG)"
   $response = Invoke-WebRequest `
     -Uri "https://api.github.com/repos/$($env:TRAVIS_REPO_SLUG)/releases/tags/$($env:TRAVIS_TAG)"  `
-    -Headers @{Authorization="token $($env:GITHUB_RELEASE_TOKEN)"} ` 
+    -Headers @{Authorization="token $($env:GITHUB_RELEASE_TOKEN)"} `
     | ConvertFrom-Json
   "Setting release as not prerelease"
   $patchResponse = Invoke-WebRequest `
