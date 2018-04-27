@@ -33,6 +33,7 @@ namespace ShowPics
 
             services.AddLogging(loggingBuilder =>
             {
+                loggingBuilder.SetMinimumLevel(LogLevel.Trace); // Allow Serilog do the filtering
                 loggingBuilder.AddSerilog(logger, dispose: true);
             });
             // Configuration options

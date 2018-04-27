@@ -7,8 +7,10 @@ using ShowPics.Utilities;
 using ShowPics.Utilities.Settings;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -247,7 +249,7 @@ namespace ShowPics.Cli
             _logger.LogInformation("Creating/updating thumbnails and metadata");
             using (_logger.BeginScope("CreateOrUpdateThumbs"))
             {
-                Parallel.ForEach(GetFilesToCreateOrUpdateEnumerable(), new ParallelOptions() { MaxDegreeOfParallelism = _folderSettings.Value.ConvertionThreads }
+                Parallel.ForEach(GetFilesToCreateOrUpdateEnumerable(), new ParallelOptions() { MaxDegreeOfParallelism = _folderSettings.Value.ConversionThreads }
                     , logicalPath =>
                     {
                         using (_logger.BeginScope("Thread {ID}", Thread.CurrentThread.ManagedThreadId))
@@ -272,9 +274,21 @@ namespace ShowPics.Cli
                                 _logger.LogError(e, "Error processing file '{LOGICAL_PATH}'.", logicalPath);
                                 throw;
                             }
+                            if (_folderSettings.Value.ForceGCAfterEachImage)
+                                ForceGC();
                         }
                     });
             }
+        }
+
+        private void ForceGC()
+        {
+            _logger.LogDebug("Forcing garbage collection");
+            var watch = new Stopwatch();
+            watch.Start();
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect(2, GCCollectionMode.Forced, true, true);
+            _logger.LogDebug("GC completed in {milliseconds}", watch.ElapsedMilliseconds);
         }
 
         public void CreateFolders()
