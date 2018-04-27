@@ -12,6 +12,7 @@ using SixLabors.ImageSharp.MetaData;
 using System.Globalization;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Transforms;
+using System.Runtime.Serialization;
 
 namespace ShowPics.Cli
 {
@@ -60,15 +61,22 @@ namespace ShowPics.Cli
             file.Path = LogicalPath;
             file.ThumbnailPath = thumbnailPath;
 
-            using (var image = Image.Load(originalPhysicalPath))
+            try
             {
-                file.Width = image.Width;
-                file.Height = image.Height;
-                file.OriginalCreationTime = GetOriginalCreationDate(image.MetaData);
-                var desiredHeight = 200;
-                var desiredWidth = image.Width * desiredHeight / image.Height;
-                image.Mutate(x => x.Resize(desiredWidth, desiredHeight));
-                image.Save(thumbnailPhysicalPath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder());
+                using (var image = Image.Load(originalPhysicalPath))
+                {
+                    file.Width = image.Width;
+                    file.Height = image.Height;
+                    file.OriginalCreationTime = GetOriginalCreationDate(image.MetaData);
+                    var desiredHeight = 200;
+                    var desiredWidth = image.Width * desiredHeight / image.Height;
+                    image.Mutate(x => x.Resize(desiredWidth, desiredHeight));
+                    image.Save(thumbnailPhysicalPath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder());
+                }
+            }
+            catch (Exception e)
+            {
+                throw new ImageProcessingException("An error occurred while processing image file.", e);
             }
 
             if (file.Id == 0)
@@ -90,4 +98,24 @@ namespace ShowPics.Cli
             return null;
         }
     }
+
+    public class ImageProcessingException : Exception
+    {
+        public ImageProcessingException()
+        {
+        }
+
+        public ImageProcessingException(string message) : base(message)
+        {
+        }
+
+        public ImageProcessingException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        protected ImageProcessingException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
+    }
+
 }

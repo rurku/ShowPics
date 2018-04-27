@@ -253,13 +253,25 @@ namespace ShowPics.Cli
                         using (_logger.BeginScope("Thread {ID}", Thread.CurrentThread.ManagedThreadId))
                         {
                             _logger.LogInformation("Creating or updating file '{LOGICAL_PATH}'", logicalPath);
-                            using (var scope = _serviceProvider.CreateScope())
+                            try
                             {
-                                var creatorFactory = scope.ServiceProvider.GetService<Func<string, IThumbnailCreator>>();
-                                var thumbnailCreator = creatorFactory(logicalPath);
-                                thumbnailCreator.CreateOrUpdateThumbnail();
+                                using (var scope = _serviceProvider.CreateScope())
+                                {
+                                    var creatorFactory = scope.ServiceProvider.GetService<Func<string, IThumbnailCreator>>();
+                                    var thumbnailCreator = creatorFactory(logicalPath);
+                                    thumbnailCreator.CreateOrUpdateThumbnail();
+                                }
+                                _logger.LogInformation("Creating or updating file '{LOGICAL_PATH}' complete!", logicalPath);
                             }
-                            _logger.LogInformation("Creating or updating file '{LOGICAL_PATH}' complete!", logicalPath);
+                            catch (ImageProcessingException e)
+                            {
+                                _logger.LogWarning(e, "Non-fatal error processing file '{LOGICAL_PATH}'.", logicalPath);
+                            }
+                            catch (Exception e)
+                            {
+                                _logger.LogError(e, "Error processing file '{LOGICAL_PATH}'.", logicalPath);
+                                throw;
+                            }
                         }
                     });
             }
