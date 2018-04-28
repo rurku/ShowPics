@@ -23,18 +23,19 @@ namespace ShowPics.Cli
         private IOptions<FolderSettings> _folderSettings;
         private readonly PathHelper _pathHelper;
         private IServiceProvider _serviceProvider;
-
+        private readonly ISingleInstanceLock _sigleInstanceLock;
         private string[] _filesToKeep =
             {
                 "data.db"
             };
 
-        public ConversionRunner(ILogger<ConversionRunner> logger, IOptions<FolderSettings> folderSettings, PathHelper pathHelper, IServiceProvider serviceProvider)
+        public ConversionRunner(ILogger<ConversionRunner> logger, IOptions<FolderSettings> folderSettings, PathHelper pathHelper, IServiceProvider serviceProvider, ISingleInstanceLock sigleInstanceLock)
         {
             _logger = logger;
             _folderSettings = folderSettings;
             _pathHelper = pathHelper;
             _serviceProvider = serviceProvider;
+            _sigleInstanceLock = sigleInstanceLock;
         }
 
         public void RemoveNonExistingFromDisk()
@@ -403,10 +404,28 @@ namespace ShowPics.Cli
 
         public void Run()
         {
-            RemoveNonExistingFromDb();
-            RemoveNonExistingFromDisk();
-            CreateFolders();
-            CreateOrUpdateThumbs();
+            try
+            {
+                using (_sigleInstanceLock.Lock(Path.GetFullPath(_folderSettings.Value.ThumbnailsPath)))
+                {
+                    RemoveNonExistingFromDb();
+                    RemoveNonExistingFromDisk();
+                    CreateFolders();
+                    CreateOrUpdateThumbs();
+                }
+            }
+            catch (AnotherInstanceRunningException e)
+            {
+                _logger.LogWarning(e, "Another instance detected");
+                e.Data["Handled"] = null;
+                throw;
+            }
+            catch (Exception e)
+            {
+                _logger.LogCritical(e, "Unhandled exception");
+                e.Data["Handled"] = null;
+                throw;
+            }
         }
 
         private class FileSystemNodeEnumerationItem

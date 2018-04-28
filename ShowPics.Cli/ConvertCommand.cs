@@ -18,6 +18,7 @@ namespace ShowPics.Cli
         {
             services.AddTransient<ConversionRunner>();
             services.AddTransient<Func<string, IThumbnailCreator>>(sp => s => ActivatorUtilities.CreateInstance<ThumbnailCreator>(sp, s));
+            services.AddScoped<ISingleInstanceLock, SingleInstanceLock>();
         }
 
         public void Run(string[] args, IServiceProvider serviceProvider)

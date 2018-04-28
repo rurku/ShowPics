@@ -22,6 +22,16 @@ namespace ShowPics
 
         public static void Main(string[] args)
         {
+            AppDomain.CurrentDomain.UnhandledException += (sender, eventArgs) =>
+            {
+                if (eventArgs.ExceptionObject is Exception e)
+                {
+                    // If the exception has already been handled then just exit, so the runtime will not treat it as unhandled exception
+                    if (e.Data.Contains("Handled"))
+                        Environment.Exit(1);
+                }
+            };
+
             if (Environment.GetEnvironmentVariable("RUNS_IN_IIS_EXPRESS") == "true" && args.Length == 0)
                 args = new string[] { "host" };
 
