@@ -1,7 +1,7 @@
+import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpModule } from '@angular/http';
+import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 
 import { MediaBrowserModule } from './media-browser/media-browser.module';
@@ -15,15 +15,16 @@ import { NavMenuComponent } from './navmenu/navmenu.component';
     NavMenuComponent
   ],
   imports: [
-    CommonModule,
-    HttpModule,
+    BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
+    HttpClientModule,
     FormsModule,
     MediaBrowserModule,
     RouterModule.forRoot([
       { path: '', redirectTo: 'browse', pathMatch: 'full' },
       { path: '**', redirectTo: 'browse' }
     ])
-  ]
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
 })
-export class AppModuleShared {
-}
+export class AppModule { }
