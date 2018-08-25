@@ -25,6 +25,9 @@
             ],
             "styles": [
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "node_modules/angular-tree-component/dist/angular-tree-component.css",
+              "node_modules/photoswipe/dist/photoswipe.css",
+              "node_modules/photoswipe/dist/default-skin/default-skin.css",
               "src/styles.css"
             ],
             "scripts": []
