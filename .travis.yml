@@ -1,7 +1,7 @@
 language: csharp
 solution: ShowPics.sln
 mono: none
-dotnet: 2.1.101
+dotnet: 2.1.401
 os: linux
 dist: trusty
 env:
