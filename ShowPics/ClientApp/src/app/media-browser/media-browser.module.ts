@@ -13,7 +13,7 @@ import { RouterModule } from '@angular/router';
     RouterModule.forChild([
       { path: 'browse', component: MediaBrowserComponent }
     ]),
-    TreeModule
+    TreeModule.forRoot()
   ],
   declarations: [TreeComponent, ThumbnailsComponent, MediaBrowserComponent],
   exports: []

@@ -1,6 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { MediaBrowserComponent } from './media-browser.component';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 describe('MediaBrowserComponent', () => {
   let component: MediaBrowserComponent;
@@ -8,7 +9,8 @@ describe('MediaBrowserComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ MediaBrowserComponent ]
+      declarations: [MediaBrowserComponent],
+      schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
   }));

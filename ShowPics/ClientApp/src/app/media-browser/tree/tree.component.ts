@@ -35,7 +35,7 @@ export class TreeComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.getTree();
+    this.getTree(); 
   }
 
   onSelect(fso: FileSystemObject) {
