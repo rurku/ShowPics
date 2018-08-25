@@ -23,7 +23,7 @@
     "@angular/router": "^6.1.4",
     "@nguniversal/module-map-ngfactory-loader": "6.0.0",
     "@types/photoswipe": "^4.0.28",
-    "angular-tree-component": "^5.0.0",
+    "angular-tree-component": "^8.0.0",
     "aspnet-prerendering": "^3.0.1",
     "bootstrap": "^4.1.3",
     "core-js": "^2.5.4",
