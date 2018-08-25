@@ -23,7 +23,7 @@ export class TreeComponent implements OnInit {
   constructor(private fileService: FileService) { }
 
   getTree(): void {
-    this.fileService.getFiles().then(fso => {
+    this.fileService.getFiles().subscribe(fso => {
       this.fillSubfolders(fso);
       this.tree = fso.children
     });

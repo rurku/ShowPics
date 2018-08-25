@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Headers, Http } from '@angular/http';
-import 'rxjs/add/operator/toPromise';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { FileSystemObject } from './file-service-dtos';
 
 @Injectable()
@@ -14,13 +15,13 @@ export class FileService {
     return Promise.reject(error.message || error);
   }
 
-  constructor(private http: Http) { }
+  constructor(private http: HttpClient) { }
 
-  getFiles(): Promise<FileSystemObject> {
+  getFiles(): Observable<FileSystemObject> {
     return this.http.get(this.filesUrl)
-      .toPromise()
-      .then(response => response.json() as FileSystemObject)
-      .catch(FileService.handleError);
+      .pipe(
+        catchError(FileService.handleError)
+      );
   }
 
   getUri(path: string) {
