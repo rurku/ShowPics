@@ -6,6 +6,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using Microsoft.EntityFrameworkCore.Query;
+
 namespace ShowPics.Data
 {
     public class FilesData : IFilesData
@@ -40,6 +43,72 @@ namespace ShowPics.Data
         public ICollection<Folder> GetAll()
         {
             return _dbContext.Folders.Include(x => x.Files).ToListAsync().Result;
+        }
+
+        public ICollection<Folder> GetTopLevelFolders(int foldersDepth, int filesDepth)
+        {
+            if (foldersDepth < 0 || foldersDepth > 2)
+                throw new ArgumentOutOfRangeException(nameof(foldersDepth), "Argument must be between 0 and 2");
+            if (filesDepth < 0 || filesDepth > 2)
+                throw new ArgumentOutOfRangeException(nameof(filesDepth), "Argument must be between 0 and 2");
+            if (filesDepth > foldersDepth + 1)
+                throw new ArgumentOutOfRangeException(nameof(filesDepth), $"Argument must not be greater than {nameof(foldersDepth)} + 1");
+
+            IQueryable<Folder> foldersQueryable = _dbContext.Folders;
+            if (foldersDepth > 0)
+            {
+                var includable = foldersQueryable.Include(x => x.Children);
+                if (foldersDepth > 1)
+                {
+                    includable = includable.ThenInclude(x => x.Children);
+                }
+                foldersQueryable = includable;
+            }
+            if (filesDepth > 0)
+            {
+                foldersQueryable = foldersQueryable.Include(x => x.Files);
+
+                if (filesDepth > 1)
+                {
+                    foldersQueryable = foldersQueryable.Include(x => x.Children).ThenInclude(x => x.Files);
+                }
+            }
+
+            var result = foldersQueryable.Where(x => x.ParentId == null).ToListAsync().Result;
+            return result;
+        }
+
+        public Folder GetFolder(string logicalPath, int foldersDepth, int filesDepth)
+        {
+            if (foldersDepth < 0 || foldersDepth > 2)
+                throw new ArgumentOutOfRangeException(nameof(foldersDepth), "Argument must be between 0 and 2");
+            if (filesDepth < 0 || filesDepth > 2)
+                throw new ArgumentOutOfRangeException(nameof(filesDepth), "Argument must be between 0 and 2");
+            if (filesDepth > foldersDepth + 1)
+                throw new ArgumentOutOfRangeException(nameof(filesDepth), $"Argument must not be greater than {nameof(foldersDepth)} + 1");
+
+            IQueryable<Folder> foldersQueryable = _dbContext.Folders;
+            if (foldersDepth > 0)
+            {
+                var includable = foldersQueryable.Include(x => x.Children);
+                if (foldersDepth > 1)
+                {
+                    includable = includable.ThenInclude(x => x.Children);
+                }
+                foldersQueryable = includable;
+            }
+            if (filesDepth > 0)
+            {
+                foldersQueryable = foldersQueryable.Include(x => x.Files);
+
+                if (filesDepth > 1)
+                {
+                    foldersQueryable = foldersQueryable.Include(x => x.Children).ThenInclude(x => x.Files);
+                }
+            }
+
+            var result = foldersQueryable.SingleOrDefaultAsync(x => x.Path == logicalPath).Result;
+            return result;
         }
 
         public async Task<ICollection<Folder>> GetAllAsync(CancellationToken cancellationToken = default(CancellationToken))

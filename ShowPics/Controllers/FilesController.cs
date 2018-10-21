@@ -33,24 +33,23 @@ namespace ShowPics.Controllers
         }
 
         [HttpGet("{*path}")]
-        public ActionResult Get(string path, int? depth)
+        public ActionResult Get(string path, int depth = 1)
         {
-            var folders = _filesData.GetAll();
-
             if (string.IsNullOrEmpty(path))
             {
+                var folders = _filesData.GetTopLevelFolders(depth, Math.Max(depth - 1, 0));
                 return Ok(new DirectoryDto()
                 {
                     Name = "",
                     Path = _pathHelper.PathToUrl(_options.Value.OriginalsLogicalPrefix),
                     ApiPath = _pathHelper.PathToUrl(_pathHelper.GetApiPath(_options.Value.OriginalsLogicalPrefix)),
-                    HasSubdirectories = folders.Any(x => x.ParentId == null),
-                    Children = depth == 0 ? null : folders.OrderBy(x => x.Name).Where(x => x.ParentId == null).Select(x => MapToDto(x, depth - 1)).ToList()
+                    HasSubdirectories = folders.Any(),
+                    Children = depth == 0 ? null : folders.OrderBy(x => x.Name).Select(x => MapToDto(x, depth - 1)).ToList()
                 });
             }
             else
             {
-                var folder = folders.SingleOrDefault(x => x.Path == _pathHelper.JoinLogicalPaths(_options.Value.OriginalsLogicalPrefix, path));
+                var folder = _filesData.GetFolder(_pathHelper.JoinLogicalPaths(_options.Value.OriginalsLogicalPrefix, path), depth + 1, depth);
                 if (folder != null)
                     return Ok(MapToDto(folder, depth));
                 var file = _filesData.GetFile(_pathHelper.JoinLogicalPaths(_options.Value.OriginalsLogicalPrefix, path));
