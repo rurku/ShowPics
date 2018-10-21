@@ -1,7 +1,9 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FileService } from '../file.service';
 import { FileSystemObject, FileSystemObjectTypes } from '../file-service-dtos';
-import { TREE_ACTIONS, KEYS, IActionMapping, ITreeOptions } from 'angular-tree-component';
+import { TREE_ACTIONS, KEYS, IActionMapping, ITreeOptions, TreeNode } from 'angular-tree-component';
+import { pipe, Observable, of } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-tree',
@@ -14,24 +16,32 @@ export class TreeComponent implements OnInit {
 
   options: ITreeOptions = {
     idField: 'path',
-    childrenField: 'subfolders'
+    getChildren: (treeNode: TreeNode) => this.getChildren(treeNode.data).toPromise(),
+    hasChildrenField: 'hasSubdirectories',
+    childrenField: 'subdirectories'
   }
-
 
   @Output() onSelected = new EventEmitter<FileSystemObject>();
 
   constructor(private fileService: FileService) { }
 
-  getTree(): void {
-    this.fileService.getFiles().subscribe(fso => {
-      this.fillSubfolders(fso);
-      this.tree = fso.children
-    });
+  getChildren(node: FileSystemObject): Observable<FileSystemObject[]> {
+    if (node.children == null) {
+      return this.fileService.getFiles(node.apiPath, 1)
+        .pipe(
+          tap((fso: FileSystemObject) => node.children = fso.children),
+          map((fso: FileSystemObject) => fso.children.filter(x => x.type === FileSystemObjectTypes.DIRECTORY))
+        );
+    }
+    else {
+      return of(node.children.filter(x => x.type === FileSystemObjectTypes.DIRECTORY))
+    }
   }
 
-  fillSubfolders(fso: FileSystemObject) {
-    fso.subfolders = fso.children.filter(x => x.type === FileSystemObjectTypes.DIRECTORY);
-    fso.subfolders.forEach(x => this.fillSubfolders(x));
+  getTree(): void {
+    this.fileService.getFiles(FileService.rootUrl, 1).subscribe(fso => {
+      this.tree = fso.children
+    });
   }
 
   ngOnInit() {
@@ -39,7 +49,9 @@ export class TreeComponent implements OnInit {
   }
 
   onSelect(fso: FileSystemObject) {
-    this.selectedObject = fso;
-    this.onSelected.emit(fso);
+    this.getChildren(fso).subscribe(() => {
+      this.selectedObject = fso;
+      this.onSelected.emit(fso);
+    })
   }
 }

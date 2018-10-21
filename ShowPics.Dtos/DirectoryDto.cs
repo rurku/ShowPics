@@ -8,6 +8,7 @@ namespace ShowPics.Dtos
     public class DirectoryDto : FileSystemObject
     {
         [JsonProperty(Order = 0)]
-        public IList<FileSystemObject> Children { get; set; } = new List<FileSystemObject>();
+        public IList<FileSystemObject> Children { get; set; }
+        public bool HasSubdirectories { get; set; }
     }
 }

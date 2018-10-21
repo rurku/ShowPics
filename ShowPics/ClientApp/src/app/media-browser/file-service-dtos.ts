@@ -1,13 +1,15 @@
 export class FileSystemObject {
   type: string;
   path: string;
+  apiPath: string;
   thumbnailPath: string;
   name: string;
   children: FileSystemObject[];
   contentType: string;
   width: number;
   height: number;
-  subfolders: FileSystemObject[];
+  hasSubdirectories: boolean;
+  subdirectories: FileSystemObject[];
 }
 
 export class FileSystemObjectTypes {

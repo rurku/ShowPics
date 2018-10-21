@@ -33,7 +33,7 @@ namespace ShowPics.Controllers
         }
 
         [HttpGet("{*path}")]
-        public ActionResult Get(string path)
+        public ActionResult Get(string path, int? depth)
         {
             var folders = _filesData.GetAll();
 
@@ -42,15 +42,17 @@ namespace ShowPics.Controllers
                 return Ok(new DirectoryDto()
                 {
                     Name = "",
-                    Path = "/",
-                    Children = folders.OrderBy(x => x.Name).Where(x => x.ParentId == null).Select(x => MapToDto(x)).ToList()
+                    Path = _pathHelper.PathToUrl(_options.Value.OriginalsLogicalPrefix),
+                    ApiPath = _pathHelper.PathToUrl(_pathHelper.GetApiPath(_options.Value.OriginalsLogicalPrefix)),
+                    HasSubdirectories = folders.Any(x => x.ParentId == null),
+                    Children = depth == 0 ? null : folders.OrderBy(x => x.Name).Where(x => x.ParentId == null).Select(x => MapToDto(x, depth - 1)).ToList()
                 });
             }
             else
             {
                 var folder = folders.SingleOrDefault(x => x.Path == _pathHelper.JoinLogicalPaths(_options.Value.OriginalsLogicalPrefix, path));
                 if (folder != null)
-                    return Ok(MapToDto(folder));
+                    return Ok(MapToDto(folder, depth));
                 var file = _filesData.GetFile(_pathHelper.JoinLogicalPaths(_options.Value.OriginalsLogicalPrefix, path));
                 if (file != null)
                     return Ok(MapToDto(file));
@@ -66,19 +68,30 @@ namespace ShowPics.Controllers
                 ContentType = _mimeTypeMapping.GetValueOrDefault(Path.GetExtension(file.Name)),
                 Name = file.Name,
                 Path = _pathHelper.PathToUrl(file.Path),
+                ApiPath = _pathHelper.PathToUrl(_pathHelper.GetApiPath(file.Path)),
                 Height = file.Height,
                 Width = file.Width,
                 ThumbnailPath = _pathHelper.PathToUrl(file.ThumbnailPath)
             };
         }
 
-        FileSystemObject MapToDto(Entities.Folder folder)
+        FileSystemObject MapToDto(Entities.Folder folder, int? depth)
         {
             return new DirectoryDto()
             {
                 Path = _pathHelper.PathToUrl(folder.Path),
+                ApiPath = _pathHelper.PathToUrl(_pathHelper.GetApiPath(folder.Path)),
                 Name = folder.Name,
-                Children = folder.Children.OrderBy(x => x.Name).Select(MapToDto).Union(folder.Files.OrderBy(x => x.OriginalCreationTime ?? x.ModificationTimestamp).Select(MapToDto)).ToList()
+                HasSubdirectories = folder.Children.Any(),
+                Children = depth == 0
+                    ? null
+                    : folder.Children.OrderBy(x => x.Name)
+                        .Select(x => MapToDto(x, depth - 1))
+                        .Union(
+                            folder.Files.OrderBy(x => x.OriginalCreationTime ?? x.ModificationTimestamp)
+                            .Select(MapToDto)
+                        )
+                        .ToList()
             };
         }
     }

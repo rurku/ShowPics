@@ -8,6 +8,7 @@ namespace ShowPics.Dtos
     {
         public string Type => GetType().Name;
         public virtual string Path { get; set; }
+        public virtual string ApiPath { get; set; }
         public virtual string Name { get; set; }
     }
 }
