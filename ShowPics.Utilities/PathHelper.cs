@@ -55,6 +55,16 @@ namespace ShowPics.Utilities
             throw new Exception($"Could not map original path '{originalPath}' to thumbnail path.");
         }
 
+        public string GetApiPath(string originalPath)
+        {
+            if ((originalPath + "/").StartsWith(_folderSettings.Value.OriginalsLogicalPrefix + "/"))
+            {
+                var path = JoinLogicalPaths("api/Files", originalPath.Substring(_folderSettings.Value.OriginalsLogicalPrefix.Length).TrimStart('/'));
+                return path;
+            }
+            throw new Exception($"Could not map original path '{originalPath}' to thumbnail path.");
+        }
+
         public string GetParentPath(string logicalPath)
         {
             var split = logicalPath.Split('/', options: StringSplitOptions.RemoveEmptyEntries);

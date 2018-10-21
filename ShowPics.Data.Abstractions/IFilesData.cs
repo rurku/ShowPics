@@ -11,6 +11,8 @@ namespace ShowPics.Data.Abstractions
     {
         Task<ICollection<Folder>> GetAllAsync(CancellationToken cancellationToken = default(CancellationToken));
         ICollection<Folder> GetAll();
+        ICollection<Folder> GetTopLevelFolders(int foldersDepth, int filesDepth);
+        Folder GetFolder(string logicalPath, int foldersDepth, int filesDepth);
         void Remove(File file);
         void Remove(Folder folder);
         void Add(File file);
