@@ -28,7 +28,7 @@ namespace ShowPics.Utilities
         public string JoinLogicalPaths(params string[] paths)
         {
             var normalized = paths.Select(x => x.Trim('/')).Where(x => !string.IsNullOrEmpty(x));
-            return string.Join('/', normalized);
+            return string.Join("/", normalized);
         }
 
         public string GetPhysicalPath(string logicalPath)
@@ -67,15 +67,15 @@ namespace ShowPics.Utilities
 
         public string GetParentPath(string logicalPath)
         {
-            var split = logicalPath.Split('/', options: StringSplitOptions.RemoveEmptyEntries);
+            var split = logicalPath.Split(new[] { '/' }, options: StringSplitOptions.RemoveEmptyEntries);
             if (split.Length == 0)
                 return null;
-            return string.Join('/', split.Take(split.Length - 1));
+            return string.Join("/", split.Take(split.Length - 1));
         }
 
         public string GetName(string logicalPath)
         {
-            var split = logicalPath.Split('/', options: StringSplitOptions.RemoveEmptyEntries);
+            var split = logicalPath.Split(new[] { '/' }, options: StringSplitOptions.RemoveEmptyEntries);
             if (split.Length == 0)
                 return "";
             return split.Last();
