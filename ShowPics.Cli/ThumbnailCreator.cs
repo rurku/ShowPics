@@ -11,7 +11,6 @@ using System.Text.RegularExpressions;
 using SixLabors.ImageSharp.MetaData;
 using System.Globalization;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Processing.Transforms;
 using System.Runtime.Serialization;
 
 namespace ShowPics.Cli
